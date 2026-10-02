@@ -46,13 +46,48 @@ namespace Pintinho
                     Ellipse(g, 8.2f, 9f, 1.6f, 0.55f, cur, fg, 0.15f);
                     break;
                 case "carimbo":
-                    using (GraphicsPath p = Shapes.StampPath(stampKind, 5f, 5.1f, 4f))
-                    using (SolidBrush b = new SolidBrush(cur))
-                    using (Pen pen = Shapes.RoundPen(fg, 0.3f))
-                    {
-                        g.FillPath(b, p);
-                        g.DrawPath(pen, p);
-                    }
+                    Stamps.Draw(g, stampKind, 5f, 5f, 4.3f, cur, fg, 0.3f);
+                    break;
+                case "lapis":
+                    FillStroke(g, "M7.4 1.4 L8.6 2.6 L3.4 7.8 L2.2 6.6 Z", Shapes.Hex(0xfbe7a1), fg, 0.3f);
+                    FillStroke(g, "M2.2 6.6 L3.4 7.8 L1.2 8.8 Z", cur, fg, 0.3f);
+                    FillStroke(g, "M7.4 1.4 L8 0.8 Q8.3 0.5 8.6 0.8 L9.2 1.4 Q9.5 1.7 9.2 2 L8.6 2.6 Z", Shapes.Hex(0xf7c6c7), fg, 0.3f);
+                    break;
+                case "marcador":
+                    using (Pen p = new Pen(Color.FromArgb(140, cur), 1.1f)) { p.StartCap = LineCap.Round; p.EndCap = LineCap.Round; g.DrawLine(p, 1, 9.2f, 7, 9.2f); }
+                    FillStroke(g, "M6.2 1.2 L8.8 3.8 L4.8 7.8 L2.2 5.2 Z", Shapes.Hex(0xe6dccf), fg, 0.3f);
+                    FillStroke(g, "M2.2 5.2 L4.8 7.8 L2.8 8.4 L1.6 7.2 Z", cur, fg, 0.3f);
+                    break;
+                case "contagotas":
+                    FillStroke(g, "M6.6 1.4 Q7.6 0.4 8.6 1.4 Q9.6 2.4 8.6 3.4 L7.6 4.4 L5.6 2.4 Z", fg, fg, 0.3f);
+                    FillStroke(g, "M6.2 3 L7 3.8 L3 7.8 L2.2 7 Z", Color.White, fg, 0.3f);
+                    Ellipse(g, 1.7f, 8.5f, 0.75f, 0.75f, cur, cur, 0f);
+                    break;
+                case "casa":
+                    Stroke(g, "M1.5 5 L5 1.8 L8.5 5", fg, 0.8f);
+                    Stroke(g, "M2.6 4.2 V8.4 H7.4 V4.2", fg, 0.8f);
+                    Stroke(g, "M4.2 8.4 V6.2 H5.8 V8.4", fg, 0.8f);
+                    break;
+                case "refazer":
+                    Stroke(g, "M1.5 7.8 C1.5 4.6 3.5 3.4 5.8 3.4 L8 3.4", t.Ceu, 1.1f);
+                    Stroke(g, "M6.4 1.6 L8.2 3.4 L6.4 5.2", t.Ceu, 1.1f);
+                    break;
+                case "desenhos-pastel":
+                    FillStroke(g, "M1 1 H4.6 V4.6 H1 Z", Shapes.Hex(0xf7c6c7), fg, 0.4f);
+                    FillStroke(g, "M5.4 1 H9 V4.6 H5.4 Z", Shapes.Hex(0xa7d3e8), fg, 0.4f);
+                    FillStroke(g, "M1 5.4 H4.6 V9 H1 Z", Shapes.Hex(0xb5d8b1), fg, 0.4f);
+                    FillStroke(g, "M5.4 5.4 H9 V9 H5.4 Z", Shapes.Hex(0xfbe7a1), fg, 0.4f);
+                    break;
+                case "salvar-branco":
+                    Stroke(g, "M5 1.2 L5 6.2", fg, 1f);
+                    Stroke(g, "M3 4.4 L5 6.4 L7 4.4", fg, 1f);
+                    Stroke(g, "M1.5 6.4 L1.5 8.8 L8.5 8.8 L8.5 6.4", fg, 1f);
+                    break;
+                case "controle":
+                    Stroke(g, "M2.75 2.9 H7.25 Q8.9 2.9 9.05 4.9 Q9.2 6.65 8 6.65 Q7.3 6.65 6.8 5.8 H3.2 Q2.7 6.65 2 6.65 Q0.8 6.65 0.95 4.9 Q1.1 2.9 2.75 2.9 Z", fg, 0.5f);
+                    Stroke(g, "M2.75 4.2 V5.4 M2.15 4.8 H3.35", fg, 0.5f);
+                    Ellipse(g, 7f, 4.4f, 0.3f, 0.3f, fg, fg, 0f);
+                    Ellipse(g, 7.7f, 5.1f, 0.3f, 0.3f, fg, fg, 0f);
                     break;
                 case "borracha":
                     g.TranslateTransform(5, 5);

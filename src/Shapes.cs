@@ -6,16 +6,25 @@ namespace Pintinho
 {
     static class Shapes
     {
-        public const int StampKinds = 4;
-
         public static Color Hex(int rgb)
         {
             return Color.FromArgb(255, (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255);
         }
 
-        public static Color FromHue(float h)
+        public static string ToHex(Color c)
         {
-            float s = 0.85f, v = 0.95f;
+            return "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
+        }
+
+        public static Color WithAlpha(Color c, int alpha)
+        {
+            return Color.FromArgb(Math.Max(0, Math.Min(255, alpha)), c.R, c.G, c.B);
+        }
+
+        // h 0..360, s e v 0..1
+        public static Color FromHsv(float h, float s, float v)
+        {
+            h = ((h % 360) + 360) % 360;
             float c = v * s, x = c * (1 - Math.Abs((h / 60f) % 2 - 1)), m = v - c;
             float r, g, b;
             if (h < 60) { r = c; g = x; b = 0; }
@@ -24,7 +33,25 @@ namespace Pintinho
             else if (h < 240) { r = 0; g = x; b = c; }
             else if (h < 300) { r = x; g = 0; b = c; }
             else { r = c; g = 0; b = x; }
-            return Color.FromArgb(255, (int)((r + m) * 255), (int)((g + m) * 255), (int)((b + m) * 255));
+            return Color.FromArgb(255, (int)Math.Round((r + m) * 255), (int)Math.Round((g + m) * 255), (int)Math.Round((b + m) * 255));
+        }
+
+        public static void ToHsv(Color c, out float h, out float s, out float v)
+        {
+            float r = c.R / 255f, g = c.G / 255f, b = c.B / 255f;
+            float max = Math.Max(r, Math.Max(g, b)), min = Math.Min(r, Math.Min(g, b)), d = max - min;
+            v = max;
+            s = max <= 0 ? 0 : d / max;
+            if (d <= 0) h = 0;
+            else if (max == r) h = 60 * (((g - b) / d) % 6);
+            else if (max == g) h = 60 * ((b - r) / d + 2);
+            else h = 60 * ((r - g) / d + 4);
+            if (h < 0) h += 360;
+        }
+
+        public static Color FromHue(float h)
+        {
+            return FromHsv(h, 0.85f, 0.95f);
         }
 
         public static Pen RoundPen(Color c, float w)
@@ -62,49 +89,6 @@ namespace Pintinho
             GraphicsPath p = new GraphicsPath();
             p.AddPolygon(pts);
             return p;
-        }
-
-        public static GraphicsPath Heart(float cx, float cy, float s)
-        {
-            GraphicsPath p = new GraphicsPath();
-            p.AddBezier(cx, cy - 0.35f * s, cx - 0.05f * s, cy - 0.95f * s, cx - 1.0f * s, cy - 0.95f * s, cx - 1.0f * s, cy - 0.3f * s);
-            p.AddBezier(cx - 1.0f * s, cy - 0.3f * s, cx - 1.0f * s, cy + 0.2f * s, cx - 0.35f * s, cy + 0.55f * s, cx, cy + 1.0f * s);
-            p.AddBezier(cx, cy + 1.0f * s, cx + 0.35f * s, cy + 0.55f * s, cx + 1.0f * s, cy + 0.2f * s, cx + 1.0f * s, cy - 0.3f * s);
-            p.AddBezier(cx + 1.0f * s, cy - 0.3f * s, cx + 1.0f * s, cy - 0.95f * s, cx + 0.05f * s, cy - 0.95f * s, cx, cy - 0.35f * s);
-            p.CloseFigure();
-            return p;
-        }
-
-        public static GraphicsPath Circle(float cx, float cy, float r)
-        {
-            GraphicsPath p = new GraphicsPath();
-            p.AddEllipse(cx - r, cy - r, 2 * r, 2 * r);
-            return p;
-        }
-
-        public static GraphicsPath Flower(float cx, float cy, float r)
-        {
-            GraphicsPath p = new GraphicsPath(FillMode.Winding);
-            float pr = r * 0.45f;
-            for (int i = 0; i < 5; i++)
-            {
-                double a = -Math.PI / 2 + i * 2 * Math.PI / 5;
-                float px = cx + (float)Math.Cos(a) * r * 0.55f, py = cy + (float)Math.Sin(a) * r * 0.55f;
-                p.AddEllipse(px - pr, py - pr, 2 * pr, 2 * pr);
-            }
-            p.AddEllipse(cx - r * 0.35f, cy - r * 0.35f, r * 0.7f, r * 0.7f);
-            return p;
-        }
-
-        public static GraphicsPath StampPath(int kind, float cx, float cy, float size)
-        {
-            switch (kind)
-            {
-                case 1: return Heart(cx, cy, size * 0.9f);
-                case 2: return Circle(cx, cy, size * 0.75f);
-                case 3: return Flower(cx, cy, size);
-                default: return Star(cx, cy, size, size * 0.45f, 5);
-            }
         }
     }
 }

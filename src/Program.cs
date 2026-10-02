@@ -17,21 +17,36 @@ namespace Pintinho
             try { SetProcessDPIAware(); } catch { }
 
             bool kiosk = true;
-            string capture = null;
+            string capture = null, icon = null;
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--janela") kiosk = false;
                 else if (args[i] == "--captura" && i + 1 < args.Length) capture = args[++i];
+                else if (args[i] == "--icone" && i + 1 < args.Length) icon = args[++i];
             }
 
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e) { Log(e.Exception); };
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            if (icon != null)
+            {
+                AppIcon.Save(icon);
+                return;
+            }
 
-            MainForm form = new MainForm(kiosk);
-            form.CaptureDir = capture;
-            Application.Run(form);
+            // O instalador espera este mutex sumir antes de copiar a versão nova.
+            bool created;
+            using (Mutex mutex = new Mutex(true, "PintinhoAppMutex", out created))
+            {
+                if (!created && capture == null) return; // já está aberto
+
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e) { Log(e.Exception); };
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+
+                MainForm form = new MainForm(kiosk);
+                form.CaptureDir = capture;
+                Application.Run(form);
+                GC.KeepAlive(mutex);
+            }
         }
 
         public static void Log(Exception ex)
@@ -39,7 +54,7 @@ namespace Pintinho
             try
             {
                 Directory.CreateDirectory(Config.Dir);
-                File.AppendAllText(Path.Combine(Config.Dir, "erros.log"), DateTime.Now + "\r\n" + ex + "\r\n\r\n");
+                File.AppendAllText(Path.Combine(Config.Dir, "erros.log"), DateTime.Now + " v" + AppInfo.Version + "\r\n" + ex + "\r\n\r\n");
             }
             catch { }
         }

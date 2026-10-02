@@ -1,78 +1,92 @@
-# Pintinho — app de pintura infantil
+# Pintinho — app de pintura (infantil + adulto)
 
 Memória do projeto. Atualize este arquivo sempre que uma decisão importante mudar.
 
 ## Objetivo
-App de pintar/colorir para o filho do usuário (estilo Tux Paint, só que moderno), rodando em
-**tela cheia em modo "quiosque"** para a criança não sair do app. Tema atual: **veículos**
-(ele adora). Fase: **alpha**.
+App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escolhidos numa tela inicial:
+- **Infantil** — para o filho do usuário (ama veículos): botões grandes, 14 veículos.
+- **Aconchego** — para adultos (a esposa), no estilo "Bobbie Goods": desenhos fofos e detalhados,
+  zoom de pinça, mais ferramentas. ⚠️ "Bobbie Goods" é marca registrada: usar só o *estilo*, com
+  desenhos e nome próprios. "Aconchego" é nome provisório.
+- **Joguinhos** — futuro (aparece como "Em breve").
+Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
 
 ## Hardware alvo (restrição principal)
-- **Positivo Duo ZX3040** (2 em 1: notebook + tablet com touch, gira a tela)
+- **Positivo Duo ZX3040** (2 em 1: notebook + tablet com touch multitoque, gira a tela)
 - **Windows 10 32 bits**, CPU Intel Atom, ~2 GB RAM, tela 10" 1280x800
 - Tem que ser **leve**: nada de Electron/navegador/runtime pesado.
 
 ## Stack (decidida)
 - **C# 5 + WinForms + GDI+, .NET Framework 4.x** (já vem no Windows 10).
-- Compila com o `csc.exe` do próprio Windows
-  (`%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe`) — **sem Visual Studio nem SDK**.
+- Compila com o `csc.exe` do próprio Windows — **sem Visual Studio nem SDK**.
 - ⚠️ Esse csc só aceita **C# 5**: NÃO usar `$"..."`, `?.`, `nameof`, `=>` em membros,
   inicializador de auto-property, `out var`, tuplas, `using static`, etc.
 - Saída AnyCPU → roda em 32 e 64 bits. Fontes em UTF-8 (`/codepage:65001`).
+- Instalador: **Inno Setup 6** (instalado no PC de desenvolvimento via winget, em
+  `%LOCALAPPDATA%\Programs\Inno Setup 6`). Instala por usuário (sem admin).
+- Os `.bat` precisam de quebra de linha CRLF (ver `.gitattributes`). Neste PC o `cmd` não roda
+  programas da pasta atual sem caminho → usar `"%~dp0arquivo.bat"`.
 
 ## Design
 - Design system "Pintinho": https://claude.ai/artifact/3nDd9RhMxKX8afum9kW95q
-  (cores dos temas claro/escuro, tipografia Segoe UI, raios, tamanhos).
+  (temas `light`/`dark` = Infantil, `cozy-light`/`cozy-dark` = Aconchego; Segoe UI; raios; tamanhos).
 - Telas (canvas): https://claude.ai/artifact/8vZ1DL8P5LHsSEkL7SqgCy
-  (tela principal + galeria, claro/escuro, paisagem 1280x800 / retrato 800x1280).
+  (Infantil paisagem/retrato, tela inicial, mais cores, carimbos, Aconchego, misturador).
 - As cores ficam em `src/Theme.cs` e precisam bater com o design system.
-- Layout é definido em pixels do design (1280x800 ou 800x1280) e multiplicado por uma escala.
-- Ícones e miniaturas dos veículos vieram dos SVGs do canvas (grade 10x10 e 200x140).
+- Layout em pixels do design (1280x800 ou 800x1280) multiplicado por uma escala `sc`.
+- O usuário gosta de **ver o design antes de codar**.
 
-## Build e execução
-- `build.bat` → gera `dist\Pintinho.exe` (+ pasta `dist\desenhos`).
-- `dist\Pintinho.exe` → modo quiosque (tela cheia, bloqueia teclas).
-- `dist\Pintinho.exe --janela` → janela 1280x800 para testar no PC (Esc fecha).
-- `dist\Pintinho.exe --janela --captura <pasta>` → salva PNGs das telas (claro/escuro,
-  paisagem/retrato, galeria, área dos pais) e de cada desenho, e fecha. Serve para o Claude
-  conferir a UI sem ver a tela.
-- Instalar no tablet: copiar a pasta `dist` inteira.
+## Versão, build e release
+- Versão única no arquivo `VERSION` (ex.: `0.2.0`). O `build.bat` gera `src/AppInfo.g.cs`.
+- `build.bat` → `dist\Pintinho.exe`. `release.bat` → build + `release\Pintinho-Setup-X.Y.Z.exe`.
+- Ícone: `assets\pintinho.ico`, gerado pelo próprio app: `Pintinho.exe --icone assets\pintinho.ico`.
+- Testar: `dist\Pintinho.exe --janela` (Esc fecha). Capturas de todas as telas e desenhos:
+  `dist\Pintinho.exe --janela --captura captura` (o Claude confere a UI por elas).
+- **Publicar versão nova**: subir `VERSION`, `release.bat`, commit, `gh release create vX.Y.Z-alpha
+  --prerelease` anexando `release\Pintinho-Setup-X.Y.Z.exe` (e `dist\Pintinho.exe`).
+  Repo público: https://github.com/hallanlennonf/pintinho
+- **Atualização no app**: Área dos pais → "Procurar atualização". O `Updater` lê
+  `api.github.com/repos/hallanlennonf/pintinho/releases`, pega a mais nova que tem um asset
+  `*Setup*.exe`, compara com `AppInfo.Version`, baixa e roda `/VERYSILENT`. O app fecha; o
+  instalador espera o mutex `PintinhoAppMutex` sumir e reabre o app. Também verifica sozinho 4s
+  depois de abrir (mostra aviso na tela inicial).
 
 ## Arquitetura (src/)
-- `Program.cs` — entrada, argumentos, DPI aware, log de erros (`%LOCALAPPDATA%\Pintinho\erros.log`).
-- `Config.cs` — preferências dos pais (`%LOCALAPPDATA%\Pintinho\config.txt`, ex.: `tema=escuro`).
-- `Theme.cs` — cores dos temas claro e escuro + paleta de 16 cores de pintar.
-- `MainForm.cs` — UI inteira desenhada à mão num só controle. Modos: Pintar, Galeria, Pais.
-  Layout paisagem/retrato recalculado no `OnResize` (o tablet gira).
-- `Surface.cs` — folha de pintura (proporção fixa 10:7): camada de tinta + camada de contorno
-  (overlay transparente, sempre por cima) + máscara das linhas para o balde. Desfazer = pilha
-  de cópias (máx. 12). Ao girar a tela a folha é reescalada.
-- `Drawings.cs` — veículos descritos numa mini-linguagem (espaço 200x140, um comando por linha;
-  `S`/`SR`/`SC`/`SG`/`SE` = forma "sólida" que apaga o que está atrás) + importação de imagens da
-  pasta `desenhos\` (linhas escuras viram contorno).
-- `SvgPath.cs` — parser de `d` de SVG (M L H V C Q T Z) para GraphicsPath.
-- `Shapes.cs` — estrela, coração, flor, círculo, retângulo arredondado, utilidades de cor.
-- `Icons.cs` — ícones dos botões (grade 10x10, iguais ao design).
-- `Gallery.cs` — itens da galeria (folha em branco + veículos + arquivos) e miniaturas.
-- `KioskGuard.cs` — hook de teclado: bloqueia Win, Alt+Tab, Alt+Esc, Ctrl+Esc, Alt+F4.
+- `Program.cs` — entrada, argumentos, mutex, log (`%LOCALAPPDATA%\Pintinho\erros.log`).
+- `Config.cs` — `%LOCALAPPDATA%\Pintinho\config.txt`: tema, "minhas cores".
+- `Theme.cs` — 4 temas (Infantil claro/escuro, Aconchego claro/escuro) + paletas.
+- `MainForm.cs` — núcleo: telas (`Screen`), sobreposições (`Overlay`), layout, pintura, cadeado,
+  avisos, salvar. Partes em arquivos `partial`:
+  - `HomeScreen.cs` — tela inicial, galeria (por modo), Área dos pais (tema, trocar modo,
+    atualizar, sair).
+  - `KidsScreen.cs` — Infantil (folha 10:7 no tamanho da tela; vários dedos pintam juntos;
+    "+" mais cores; painel de carimbos).
+  - `CozyScreen.cs` — Aconchego (folha 1200x1200 com zoom/pan; pincel, lápis, marcador, spray,
+    balde, borracha, carimbo, conta-gotas; tamanho, opacidade; misturador HSV; carimbos por
+    categoria; pinça com dois dedos).
+  - `Touch.cs` — multitoque via `WM_POINTER` (cada dedo = um `Contact` com papel: pintar, pinça,
+    arrastar, cadeado). Mouse entra como id -1.
+  - `Capture.cs` — modo `--captura`.
+- `Surface.cs` — tinta + contorno + máscara do balde; desfazer/refazer; `StrokePath` (traço
+  transparente sem acumular tinta); balde com opacidade; conta-gotas.
+- `Drawings.cs` / `DrawingsCozy.cs` — desenhos numa mini-linguagem (um comando por linha; `S*` =
+  forma sólida que apaga o que está atrás). Veículos em 200x140; Aconchego em 200x200.
+- `SvgPath.cs` — `d` de SVG → GraphicsPath (M L H V C Q T A Z).
+- `Stamps.cs` — 12 carimbos (formas, natureza, veículos). `Icons.cs` — ícones (grade 10x10).
+- `Gallery.cs` — itens por modo (pastas `desenhos\` e `desenhos-aconchego\` aceitam PNG/JPG extras).
+- `Updater.cs`, `AppIcon.cs`, `KioskGuard.cs` (bloqueia Win, Alt+Tab, Alt+Esc, Ctrl+Esc, Alt+F4).
+- `installer/Pintinho.iss` — script do Inno Setup.
 
 ## Área dos pais / saída do quiosque
-- **Segurar o cadeado** 3 segundos → abre a "Área dos pais": trocar tema, sair, voltar.
-- **Ctrl+Shift+Q** sai direto.
-- Ctrl+Alt+Del não dá para bloquear (é do Windows).
-
-## Funcionalidades (alpha)
-Pincel, spray, arco-íris, balde (respeita contornos), carimbos (estrela/coração/bolinha/flor —
-tocar de novo troca), borracha, 3 tamanhos, 16 cores, desfazer, limpar, salvar PNG em
-`Imagens\Desenhos do Pintinho`, galeria com 14 veículos + desenhos extras da pasta `desenhos\`,
-temas claro/escuro, paisagem/retrato.
+- **Segurar o cadeado** 3 s (existe em todas as telas) → Área dos pais.
+- **Ctrl+Shift+Q** sai direto. Ctrl+Alt+Del não dá para bloquear.
 
 ## Ideias / próximos passos
-- Testar no tablet de verdade (desempenho do balde, toque, rotação).
-- Sons (clique, balde, salvar) com WAV curtos via `SoundPlayer`.
-- Abrir desenhos salvos para continuar pintando.
-- Mais veículos e cenários (estrada, garagem); carimbos de veículos.
-- Iniciar com o Windows (atalho em `shell:startup`).
+- Testar no tablet de verdade: multitoque, pinça, desempenho do balde e do zoom no Atom, rotação,
+  instalador e atualização automática.
+- Mais desenhos (Aconchego e veículos); pacote de desenhos baixável sem nova versão do app.
+- Joguinhos (labirinto, ligue os pontos, memória).
+- Sons; abrir desenhos salvos para continuar; Aconchego com folha retrato.
 - Bloquear gestos de borda do Windows 10 no modo tablet.
 
 ## Preferências do usuário

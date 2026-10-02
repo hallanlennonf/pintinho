@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -97,6 +98,15 @@ namespace Pintinho
                             cur = e;
                             break;
                         }
+                    case 'A':
+                        {
+                            float rx = Num(tok, ref i), ry = Num(tok, ref i), rot = Num(tok, ref i);
+                            bool large = Num(tok, ref i) != 0, sweep = Num(tok, ref i) != 0;
+                            PointF e = Pt(tok, ref i, b);
+                            AddArc(path, cur, e, rx, ry, rot, large, sweep);
+                            cur = e;
+                            break;
+                        }
                     default:
                         i++;
                         break;
@@ -104,6 +114,62 @@ namespace Pintinho
                 prev = char.ToUpper(cmd);
             }
             return path;
+        }
+
+        // Arco elíptico do SVG convertido em curvas de Bézier (algoritmo da especificação SVG).
+        static void AddArc(GraphicsPath path, PointF p0, PointF p1, float rx, float ry, float angleDeg, bool large, bool sweep)
+        {
+            if (rx == 0 || ry == 0 || p0 == p1)
+            {
+                path.AddLine(p0, p1);
+                return;
+            }
+            double phi = angleDeg * Math.PI / 180, cos = Math.Cos(phi), sin = Math.Sin(phi);
+            double dx = (p0.X - p1.X) / 2.0, dy = (p0.Y - p1.Y) / 2.0;
+            double x1p = cos * dx + sin * dy, y1p = -sin * dx + cos * dy;
+            double Rx = Math.Abs(rx), Ry = Math.Abs(ry);
+            double lam = x1p * x1p / (Rx * Rx) + y1p * y1p / (Ry * Ry);
+            if (lam > 1)
+            {
+                double k = Math.Sqrt(lam);
+                Rx *= k;
+                Ry *= k;
+            }
+            double num = Rx * Rx * Ry * Ry - Rx * Rx * y1p * y1p - Ry * Ry * x1p * x1p;
+            double den = Rx * Rx * y1p * y1p + Ry * Ry * x1p * x1p;
+            double coef = (large == sweep ? -1 : 1) * Math.Sqrt(Math.Max(0, num / den));
+            double cxp = coef * Rx * y1p / Ry, cyp = -coef * Ry * x1p / Rx;
+            double cx = cos * cxp - sin * cyp + (p0.X + p1.X) / 2.0;
+            double cy = sin * cxp + cos * cyp + (p0.Y + p1.Y) / 2.0;
+            double th1 = Angle(1, 0, (x1p - cxp) / Rx, (y1p - cyp) / Ry);
+            double dth = Angle((x1p - cxp) / Rx, (y1p - cyp) / Ry, (-x1p - cxp) / Rx, (-y1p - cyp) / Ry);
+            if (!sweep && dth > 0) dth -= 2 * Math.PI;
+            else if (sweep && dth < 0) dth += 2 * Math.PI;
+
+            int segs = Math.Max(1, (int)Math.Ceiling(Math.Abs(dth) / (Math.PI / 2)));
+            double delta = dth / segs, t = 4.0 / 3.0 * Math.Tan(delta / 4);
+            double a = th1;
+            PointF prevPt = p0;
+            for (int k = 0; k < segs; k++)
+            {
+                double a2 = a + delta;
+                PointF c1 = Map(cx, cy, Rx, Ry, cos, sin, Math.Cos(a) - t * Math.Sin(a), Math.Sin(a) + t * Math.Cos(a));
+                PointF c2 = Map(cx, cy, Rx, Ry, cos, sin, Math.Cos(a2) + t * Math.Sin(a2), Math.Sin(a2) - t * Math.Cos(a2));
+                PointF end = k == segs - 1 ? p1 : Map(cx, cy, Rx, Ry, cos, sin, Math.Cos(a2), Math.Sin(a2));
+                path.AddBezier(prevPt, c1, c2, end);
+                prevPt = end;
+                a = a2;
+            }
+        }
+
+        static PointF Map(double cx, double cy, double rx, double ry, double cos, double sin, double u, double v)
+        {
+            return new PointF((float)(cx + rx * u * cos - ry * v * sin), (float)(cy + rx * u * sin + ry * v * cos));
+        }
+
+        static double Angle(double ux, double uy, double vx, double vy)
+        {
+            return Math.Atan2(ux * vy - uy * vx, ux * vx + uy * vy);
         }
 
         static void AddQuad(GraphicsPath path, PointF p0, PointF q, PointF e)

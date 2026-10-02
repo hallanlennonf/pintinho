@@ -10,7 +10,6 @@ namespace Pintinho
     // A folha de pintura: camada de tinta + camada de contorno (sempre por cima).
     class Surface : IDisposable
     {
-        const int MaxUndo = 12;
         const int FillTolerance = 100;
 
         public int W { get; private set; }
@@ -18,21 +17,27 @@ namespace Pintinho
         public Bitmap Paint { get; private set; }
         public Bitmap Overlay { get; private set; }
 
+        readonly int maxUndo;
         byte[] mask; // 1 = pixel de linha do contorno (barreira do balde)
         readonly List<Bitmap> undo = new List<Bitmap>();
+        readonly List<Bitmap> redo = new List<Bitmap>();
 
         // estado temporário do balde
         int[] px;
         bool[] done;
         int target;
 
-        public Surface(int w, int h)
+        public Surface(int w, int h, int maxUndo)
         {
             W = w;
             H = h;
+            this.maxUndo = maxUndo;
             Paint = new Bitmap(w, h, PixelFormat.Format32bppPArgb);
             Clear();
         }
+
+        public bool CanUndo { get { return undo.Count > 0; } }
+        public bool CanRedo { get { return redo.Count > 0; } }
 
         public void Clear()
         {
@@ -50,7 +55,14 @@ namespace Pintinho
             }
         }
 
-        // Muda o tamanho da folha (tela girou). A tinta é reescalada; o desfazer é esvaziado.
+        Bitmap Snapshot()
+        {
+            Bitmap b = new Bitmap(W, H, PixelFormat.Format32bppPArgb);
+            Copy(Paint, b, false);
+            return b;
+        }
+
+        // Muda o tamanho da folha (tela girou). A tinta é reescalada; o histórico é esvaziado.
         public void Resize(int w, int h)
         {
             if (w == W && h == H) return;
@@ -66,14 +78,13 @@ namespace Pintinho
 
         public void SaveUndo()
         {
-            Bitmap b = new Bitmap(W, H, PixelFormat.Format32bppPArgb);
-            Copy(Paint, b, false);
-            undo.Add(b);
-            if (undo.Count > MaxUndo)
+            undo.Add(Snapshot());
+            if (undo.Count > maxUndo)
             {
                 undo[0].Dispose();
                 undo.RemoveAt(0);
             }
+            Dispose(redo);
         }
 
         public void DropLastUndo()
@@ -83,9 +94,18 @@ namespace Pintinho
             undo.RemoveAt(undo.Count - 1);
         }
 
+        // Desfaz o traço em andamento sem mandar nada para o "refazer" (vira pinça).
+        public void CancelStroke()
+        {
+            if (undo.Count == 0) return;
+            Copy(undo[undo.Count - 1], Paint, false);
+            DropLastUndo();
+        }
+
         public bool Undo()
         {
             if (undo.Count == 0) return false;
+            redo.Add(Snapshot());
             Bitmap b = undo[undo.Count - 1];
             undo.RemoveAt(undo.Count - 1);
             Copy(b, Paint, false);
@@ -93,10 +113,27 @@ namespace Pintinho
             return true;
         }
 
+        public bool Redo()
+        {
+            if (redo.Count == 0) return false;
+            undo.Add(Snapshot());
+            Bitmap b = redo[redo.Count - 1];
+            redo.RemoveAt(redo.Count - 1);
+            Copy(b, Paint, false);
+            b.Dispose();
+            return true;
+        }
+
+        static void Dispose(List<Bitmap> list)
+        {
+            foreach (Bitmap b in list) b.Dispose();
+            list.Clear();
+        }
+
         public void ClearUndo()
         {
-            foreach (Bitmap b in undo) b.Dispose();
-            undo.Clear();
+            Dispose(undo);
+            Dispose(redo);
         }
 
         public void SetOverlay(Bitmap ov)
@@ -115,13 +152,22 @@ namespace Pintinho
                 if (((a[i] >> 24) & 255) >= 100) mask[i] = 1;
         }
 
-        static Rectangle Around(Point c, float r)
+        static Rectangle Around(PointF c, float r)
         {
             int k = (int)Math.Ceiling(r) + 2;
-            return new Rectangle(c.X - k, c.Y - k, 2 * k, 2 * k);
+            return new Rectangle((int)c.X - k, (int)c.Y - k, 2 * k, 2 * k);
         }
 
-        public Rectangle Line(Point a, Point b, Color c, float w)
+        static Rectangle Bounds(PointF a, PointF b, float w)
+        {
+            Rectangle r = Rectangle.FromLTRB((int)Math.Floor(Math.Min(a.X, b.X)), (int)Math.Floor(Math.Min(a.Y, b.Y)),
+                (int)Math.Ceiling(Math.Max(a.X, b.X)), (int)Math.Ceiling(Math.Max(a.Y, b.Y)));
+            r.Inflate((int)w + 3, (int)w + 3);
+            return r;
+        }
+
+        // Traço opaco, desenhado pedaço a pedaço (rápido).
+        public Rectangle Line(PointF a, PointF b, Color c, float w)
         {
             using (Graphics g = Graphics.FromImage(Paint))
             {
@@ -135,12 +181,46 @@ namespace Pintinho
                     using (Pen p = Shapes.RoundPen(c, w)) g.DrawLine(p, a, b);
                 }
             }
-            Rectangle r = Rectangle.FromLTRB(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
-            r.Inflate((int)w + 2, (int)w + 2);
+            return Bounds(a, b, w);
+        }
+
+        // Traço transparente (marcador, lápis, opacidade < 100%): redesenha o traço inteiro sobre a
+        // foto tirada no início dele, só na área do último pedaço. Assim a tinta não "acumula" onde o
+        // traço passa por cima de si mesmo. Precisa de SaveUndo() no começo do traço.
+        public Rectangle StrokePath(List<PointF> pts, Color c, float w, bool flat)
+        {
+            if (undo.Count == 0 || pts.Count == 0) return Rectangle.Empty;
+            PointF a = pts[Math.Max(0, pts.Count - 2)], b = pts[pts.Count - 1];
+            Rectangle r = Bounds(a, b, w);
+            r.Intersect(new Rectangle(0, 0, W, H));
+            if (r.IsEmpty) return r;
+            Bitmap snap = undo[undo.Count - 1];
+            using (Graphics g = Graphics.FromImage(Paint))
+            {
+                g.SetClip(r);
+                g.CompositingMode = CompositingMode.SourceCopy;
+                g.DrawImage(snap, r, r, GraphicsUnit.Pixel);
+                g.CompositingMode = CompositingMode.SourceOver;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                if (pts.Count == 1)
+                {
+                    using (SolidBrush br = new SolidBrush(c)) g.FillEllipse(br, a.X - w / 2f, a.Y - w / 2f, w, w);
+                }
+                else
+                {
+                    using (Pen p = new Pen(c, w))
+                    {
+                        p.LineJoin = LineJoin.Round;
+                        p.StartCap = flat ? LineCap.Flat : LineCap.Round;
+                        p.EndCap = flat ? LineCap.Flat : LineCap.Round;
+                        g.DrawLines(p, pts.ToArray());
+                    }
+                }
+            }
             return r;
         }
 
-        public Rectangle Spray(Point c, Color col, float radius, Random rnd)
+        public Rectangle Spray(PointF c, Color col, float radius, Random rnd)
         {
             using (Graphics g = Graphics.FromImage(Paint))
             using (SolidBrush b = new SolidBrush(col))
@@ -157,21 +237,29 @@ namespace Pintinho
             return Around(c, radius + 2);
         }
 
-        public Rectangle Stamp(Point c, int kind, Color col, float size)
+        public Rectangle Stamp(PointF c, int kind, Color col, float size)
         {
             using (Graphics g = Graphics.FromImage(Paint))
-            using (GraphicsPath path = Shapes.StampPath(kind, c.X, c.Y, size))
-            using (SolidBrush b = new SolidBrush(col))
-            using (Pen p = Shapes.RoundPen(Color.FromArgb(90, 0, 0, 0), Math.Max(2f, size / 20f)))
-            {
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.FillPath(b, path);
-                g.DrawPath(p, path);
-            }
+                Stamps.Draw(g, kind, c.X, c.Y, size, col, Color.FromArgb(Math.Min(col.A, (byte)110), 0, 0, 0), Math.Max(2f, size / 14f));
             return Around(c, size * 1.3f);
         }
 
+        public Color PickColor(int x, int y)
+        {
+            if (x < 0 || y < 0 || x >= W || y >= H) return Color.Empty;
+            Color c = Paint.GetPixel(x, y);
+            return Color.FromArgb(255, c.R, c.G, c.B);
+        }
+
+        static int Blend(int dst, int r, int g, int b, int a)
+        {
+            int ia = 255 - a;
+            int dr = (dst >> 16) & 255, dg = (dst >> 8) & 255, db = dst & 255;
+            return unchecked((int)0xFF000000) | (((r * a + dr * ia) / 255) << 16) | (((g * a + dg * ia) / 255) << 8) | ((b * a + db * ia) / 255);
+        }
+
         // Balde de tinta: preenche a região parecida com o ponto tocado, parando nas linhas.
+        // Com cor transparente (opacidade < 100%), mistura com a tinta que já estava ali.
         public Rectangle Fill(int x, int y, Color c)
         {
             if (x < 0 || y < 0 || x >= W || y >= H) return Rectangle.Empty;
@@ -185,8 +273,9 @@ namespace Pintinho
                 px = new int[n];
                 Marshal.Copy(d.Scan0, px, 0, n);
                 target = px[seed];
-                int fill = c.ToArgb();
-                if (target == fill) return Rectangle.Empty;
+                bool opaque = c.A == 255;
+                int fill = Color.FromArgb(255, c.R, c.G, c.B).ToArgb();
+                if (opaque && target == fill) return Rectangle.Empty;
 
                 done = new bool[n];
                 int minX = x, maxX = x, minY = y, maxY = y;
@@ -204,7 +293,6 @@ namespace Pintinho
                     while (i < re && Ok(i))
                     {
                         done[i] = true;
-                        px[i] = fill;
                         if (row > 0)
                         {
                             if (Ok(i - W)) { if (!upOpen) { st.Push(i - W); upOpen = true; } }
@@ -225,8 +313,14 @@ namespace Pintinho
                 }
 
                 // Cobre as bordas suavizadas: 1 pixel em volta e mais 1 por baixo das linhas.
-                Dilate(fill, minX - 1, minY - 1, maxX + 1, maxY + 1, false);
-                Dilate(fill, minX - 2, minY - 2, maxX + 2, maxY + 2, true);
+                Dilate(minX - 1, minY - 1, maxX + 1, maxY + 1, false);
+                Dilate(minX - 2, minY - 2, maxX + 2, maxY + 2, true);
+
+                // pinta tudo que foi marcado
+                int x0 = Math.Max(0, minX - 2), x1 = Math.Min(W - 1, maxX + 2), y0 = Math.Max(0, minY - 2), y1 = Math.Min(H - 1, maxY + 2);
+                for (int yy = y0; yy <= y1; yy++)
+                    for (int xx = x0, i = yy * W + x0; xx <= x1; xx++, i++)
+                        if (done[i]) px[i] = opaque ? fill : Blend(px[i], c.R, c.G, c.B, c.A);
 
                 Marshal.Copy(px, 0, d.Scan0, n);
                 return Rectangle.FromLTRB(minX - 3, minY - 3, maxX + 4, maxY + 4);
@@ -252,7 +346,7 @@ namespace Pintinho
             return (dr < 0 ? -dr : dr) + (dg < 0 ? -dg : dg) + (db < 0 ? -db : db) <= FillTolerance;
         }
 
-        void Dilate(int fill, int x0, int y0, int x1, int y1, bool onlyMask)
+        void Dilate(int x0, int y0, int x1, int y1, bool onlyMask)
         {
             x0 = Math.Max(0, x0); y0 = Math.Max(0, y0);
             x1 = Math.Min(W - 1, x1); y1 = Math.Min(H - 1, y1);
@@ -268,11 +362,7 @@ namespace Pintinho
                         add.Add(i);
                 }
             }
-            foreach (int i in add)
-            {
-                done[i] = true;
-                px[i] = fill;
-            }
+            foreach (int i in add) done[i] = true;
         }
 
         public Bitmap Compose()

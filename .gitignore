@@ -1,3 +1,5 @@
 dist/*.exe
 dist/*.pdb
 captura/
+release/
+src/AppInfo.g.cs

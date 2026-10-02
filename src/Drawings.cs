@@ -18,14 +18,16 @@ namespace Pintinho
     //   G x,y x,y ...   polígono               SG ...   polígono sólido
     //   SE cx cy rx ry rot   elipse sólida girada
     //   L x1 y1 x2 y2   linha                  W k      multiplica a espessura da caneta
-    static class Drawings
+    //   E cx cy rx ry   elipse                 D x y r  bolinha preenchida com a cor da linha
+    // Os desenhos do Aconchego usam o espaço 200x200 (folha quadrada).
+    static partial class Drawings
     {
-        public const float SpaceW = 200f, SpaceH = 140f;
-
         public class Item
         {
             public string Key, Name, Script;
+            public float SpaceW = 200f, SpaceH = 140f;
             public Item(string key, string name, string script) { Key = key; Name = name; Script = script; }
+            public Item(string key, string name, float w, float h, string script) : this(key, name, script) { SpaceW = w; SpaceH = h; }
         }
 
         const string CarBody = "S M20 98 V76 L42 70 L66 44 H130 L156 70 L182 76 V98 Z\nP M73 52 L58 69 H96 V52 Z\nP M104 52 H126 L144 69 H104 Z\n";
@@ -150,6 +152,12 @@ namespace Pintinho
                 string kind = solid ? op.Substring(1) : op;
 
                 if (op == "W") { pen.Width = baseWidth * Nums(arg)[0]; continue; }
+                if (op == "D")
+                {
+                    float[] n = Nums(arg);
+                    using (SolidBrush b = new SolidBrush(pen.Color)) g.FillEllipse(b, n[0] - n[2], n[1] - n[2], 2 * n[2], 2 * n[2]);
+                    continue;
+                }
                 if (op == "L")
                 {
                     float[] n = Nums(arg);
@@ -167,19 +175,19 @@ namespace Pintinho
             pen.Width = baseWidth;
         }
 
-        // Retângulo (no bitmap w x h) onde o espaço 200x140 é desenhado, e sua escala.
-        public static float Fit(int w, int h, out float ox, out float oy)
+        // Onde o espaço do desenho cai num bitmap w x h, e sua escala.
+        public static float Fit(Item item, int w, int h, out float ox, out float oy)
         {
-            float s = Math.Min(w / SpaceW, h / SpaceH) * 0.94f;
-            ox = (w - SpaceW * s) / 2f;
-            oy = (h - SpaceH * s) / 2f;
+            float s = Math.Min(w / item.SpaceW, h / item.SpaceH) * 0.94f;
+            ox = (w - item.SpaceW * s) / 2f;
+            oy = (h - item.SpaceH * s) / 2f;
             return s;
         }
 
-        public static Point ToPixel(float x, float y, int w, int h)
+        public static Point ToPixel(Item item, float x, float y, int w, int h)
         {
             float ox, oy;
-            float s = Fit(w, h, out ox, out oy);
+            float s = Fit(item, w, h, out ox, out oy);
             return new Point((int)(ox + x * s), (int)(oy + y * s));
         }
 
@@ -191,7 +199,7 @@ namespace Pintinho
                 g.Clear(Color.Transparent);
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 float ox, oy;
-                float s = Fit(w, h, out ox, out oy);
+                float s = Fit(item, w, h, out ox, out oy);
                 g.TranslateTransform(ox, oy);
                 g.ScaleTransform(s, s);
                 // ~1.6 unidades na folha grande (~7px); nas miniaturas, nunca mais fino que 2.6px.
