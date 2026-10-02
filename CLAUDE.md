@@ -4,9 +4,9 @@ Memória do projeto. Atualize este arquivo sempre que uma decisão importante mu
 
 ## Objetivo
 App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escolhidos numa tela inicial:
-- **Infantil** — para o filho do usuário (ama veículos): botões grandes, 14 veículos.
+- **Infantil** — para o filho do usuário (ama veículos): botões grandes, 24 veículos.
 - **Aconchego** — para adultos (a esposa), no estilo "Bobbie Goods": desenhos fofos e detalhados,
-  zoom de pinça, mais ferramentas. ⚠️ "Bobbie Goods" é marca registrada: usar só o *estilo*, com
+  zoom de pinça, mais ferramentas, 16 desenhos. ⚠️ "Bobbie Goods" é marca registrada: usar só o *estilo*, com
   desenhos e nome próprios. "Aconchego" é nome provisório.
 - **Joguinhos** — futuro (aparece como "Em breve").
 Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
@@ -54,7 +54,8 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
 ## Arquitetura (src/)
 - `Program.cs` — entrada, argumentos, mutex, log (`%LOCALAPPDATA%\Pintinho\erros.log`).
 - `Config.cs` — `%LOCALAPPDATA%\Pintinho\config.txt`: tema, "minhas cores".
-- `Theme.cs` — 4 temas (Infantil claro/escuro, Aconchego claro/escuro) + paletas.
+- `Theme.cs` — 4 temas (Infantil claro/escuro, Aconchego claro/escuro) + paletas. Aconchego tem 4
+  paletas de 24 cores (Básica = padrão, Pastel, Terra, Pele e cabelo); a escolhida fica no config.
 - `MainForm.cs` — núcleo: telas (`Screen`), sobreposições (`Overlay`), layout, pintura, cadeado,
   avisos, salvar. Partes em arquivos `partial`:
   - `HomeScreen.cs` — tela inicial, galeria (por modo), Área dos pais (tema, trocar modo,
@@ -80,6 +81,13 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
 ## Área dos pais / saída do quiosque
 - **Segurar o cadeado** 3 s (existe em todas as telas) → Área dos pais.
 - **Ctrl+Shift+Q** sai direto. Ctrl+Alt+Del não dá para bloquear.
+
+## Desenhos da internet (decisão)
+- Por enquanto os desenhos são feitos em código (leves, sem problema de licença, ficam nítidos no zoom).
+- Fontes seguras se quiser importar: **OpenClipart** (domínio público, CC0) e **Wikimedia Commons**
+  (filtrar por domínio público/CC0). Evitar Pinterest/Google Imagens e páginas "para colorir"
+  comuns: têm direitos autorais e travariam uma venda futura. O app já aceita PNG/JPG nas pastas
+  `desenhos\` e `desenhos-aconchego\`.
 
 ## Ideias / próximos passos
 - Testar no tablet de verdade: multitoque, pinça, desempenho do balde e do zoom no Atom, rotação,

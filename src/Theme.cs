@@ -63,6 +63,30 @@ namespace Pintinho
             Shapes.Hex(0x1b5e20), Shapes.Hex(0x827717), Shapes.Hex(0xf57f17), Shapes.Hex(0xe65100), Shapes.Hex(0x3e2723), Shapes.Hex(0x607d8b)
         };
 
+        // Paletas do Aconchego (24 cores cada). A primeira é a padrão.
+        public static readonly string[] CozyPaletteNames = { "Básica", "Pastel", "Terra", "Pele e cabelo" };
+
+        public static readonly Color[] CozyBasic = {
+            Shapes.Hex(0x222222), Shapes.Hex(0xffffff), Shapes.Hex(0x9e9e9e), Shapes.Hex(0x795548), Shapes.Hex(0xe53935), Shapes.Hex(0xfb8c00),
+            Shapes.Hex(0xfdd835), Shapes.Hex(0x43a047), Shapes.Hex(0x1e88e5), Shapes.Hex(0x8e24aa), Shapes.Hex(0xec407a), Shapes.Hex(0x00acc1),
+            Shapes.Hex(0xb71c1c), Shapes.Hex(0xe65100), Shapes.Hex(0xf9a825), Shapes.Hex(0x1b5e20), Shapes.Hex(0x0d47a1), Shapes.Hex(0x4a148c),
+            Shapes.Hex(0xffcdd2), Shapes.Hex(0xffe0b2), Shapes.Hex(0xfff9c4), Shapes.Hex(0xc8e6c9), Shapes.Hex(0xbbdefb), Shapes.Hex(0xe1bee7)
+        };
+
+        public static readonly Color[] CozyEarth = {
+            Shapes.Hex(0x3e2723), Shapes.Hex(0x5d4037), Shapes.Hex(0x8d6e63), Shapes.Hex(0xbcaaa4), Shapes.Hex(0xd7ccc8), Shapes.Hex(0xefebe9),
+            Shapes.Hex(0xbf360c), Shapes.Hex(0xe64a19), Shapes.Hex(0xff8a65), Shapes.Hex(0xffab91), Shapes.Hex(0xffb74d), Shapes.Hex(0xffe0b2),
+            Shapes.Hex(0x827717), Shapes.Hex(0x9e9d24), Shapes.Hex(0xc0ca33), Shapes.Hex(0x33691e), Shapes.Hex(0x558b2f), Shapes.Hex(0x8bc34a),
+            Shapes.Hex(0x263238), Shapes.Hex(0x455a64), Shapes.Hex(0x78909c), Shapes.Hex(0x006064), Shapes.Hex(0x00838f), Shapes.Hex(0x80cbc4)
+        };
+
+        public static readonly Color[] CozySkin = {
+            Shapes.Hex(0xffe5d4), Shapes.Hex(0xfde0c5), Shapes.Hex(0xf9d1b0), Shapes.Hex(0xf3c29b), Shapes.Hex(0xe8b089), Shapes.Hex(0xd99e73),
+            Shapes.Hex(0xc68642), Shapes.Hex(0xa86b3c), Shapes.Hex(0x8d5524), Shapes.Hex(0x6b3e26), Shapes.Hex(0x4a2c1a), Shapes.Hex(0x3b2219),
+            Shapes.Hex(0x1b1b1b), Shapes.Hex(0x3b2a20), Shapes.Hex(0x6b4423), Shapes.Hex(0xa0522d), Shapes.Hex(0xb55239), Shapes.Hex(0xd4a017),
+            Shapes.Hex(0xe8c37e), Shapes.Hex(0xf2dfa7), Shapes.Hex(0xc0c0c0), Shapes.Hex(0xe0e0e0), Shapes.Hex(0xf48fb1), Shapes.Hex(0xe57373)
+        };
+
         // Paleta pastel do Aconchego
         public static readonly Color[] Cozy = {
             Shapes.Hex(0x2b2522), Shapes.Hex(0xffffff), Shapes.Hex(0x8c8c8c), Shapes.Hex(0xc9b8a8), Shapes.Hex(0xf4a7a3), Shapes.Hex(0xf7c6c7),

@@ -14,6 +14,11 @@ namespace Pintinho
         const int CozyPaper = 1200;
         const float CozyPx = CozyPaper / 688f; // "1 px" do controle = tamanho na folha a 100%
 
+        static readonly Color[][] CozyPalettes = { Theme.CozyBasic, Theme.Cozy, Theme.CozyEarth, Theme.CozySkin };
+        static readonly string[] BasicNames = {
+            "Preto", "Branco", "Cinza", "Marrom", "Vermelho", "Laranja", "Amarelo", "Verde", "Azul", "Roxo", "Rosa", "Turquesa",
+            "Vinho", "Abóbora", "Mostarda", "Verde-escuro", "Azul-marinho", "Uva", "Rosa-claro", "Pêssego", "Baunilha", "Menta", "Céu", "Lilás"
+        };
         static readonly string[] CozyNames = {
             "Tinta", "Branco", "Cinza", "Areia", "Pêssego", "Rosa-bebê", "Damasco", "Baunilha", "Creme", "Pistache", "Menta", "Água",
             "Céu", "Pervinca", "Lavanda", "Lilás", "Coral", "Tangerina", "Mostarda", "Folha", "Jade", "Azul-jeans", "Uva", "Framboesa"
@@ -34,7 +39,7 @@ namespace Pintinho
         bool cozyEntered;
 
         Tool cozyTool = Tool.Pincel, cozyPrevTool = Tool.Pincel;
-        Color cozyColor = Theme.Cozy[4];
+        Color cozyColor = Theme.CozyBasic[4];
         int cozySize = 8, cozyOpacity = 100, cozyStamp = 1, cozyStampSize = 50, stampCat;
         readonly List<Color> recent = new List<Color> {
             Shapes.Hex(0xf4a7a3), Shapes.Hex(0xb5d8b1), Shapes.Hex(0xfbe7a1), Shapes.Hex(0xa7d3e8), Shapes.Hex(0xf9d5a7), Shapes.Hex(0xc9b8ea)
@@ -53,7 +58,7 @@ namespace Pintinho
             new Btn("pincel", "Pincel"), new Btn("lapis", "Lápis"), new Btn("marcador", "Marcador"), new Btn("spray", "Spray"),
             new Btn("balde", "Balde"), new Btn("borracha", "Borracha"), new Btn("carimbo", "Carimbo"), new Btn("contagotas", "Conta-gotas")
         };
-        Rectangle secCor, secTam, secOpa, secPal, secRec, colorBig, colorText, plusR, sizeTrack, opacityTrack;
+        Rectangle secCor, secTam, secOpa, secPal, secRec, colorBig, colorText, plusR, sizeTrack, opacityTrack, palChip;
         readonly Rectangle[] palR = new Rectangle[Theme.Cozy.Length];
         readonly Rectangle[] recentR = new Rectangle[6];
         Font cozyTitleFont, cozySubFont, zoomFont, plusFont;
@@ -153,7 +158,9 @@ namespace Pintinho
                 y = area.Y + pad;
                 cols = 8;
             }
-            secPal = new Rectangle(x, y, w, lab); y += labGap;
+            secPal = new Rectangle(x, y, w, lab);
+            palChip = new Rectangle(x + w - R(132), y - R(6), R(132), R(28));
+            y += labGap + R(6);
             float cellW = (w - (cols - 1) * g) / (float)cols;
             for (int i = 0; i < palR.Length; i++)
                 palR[i] = new Rectangle((int)(x + (i % cols) * (cellW + g) + (cellW - sw) / 2), y + (i / cols) * (sw + g), sw, sw);
@@ -310,8 +317,12 @@ namespace Pintinho
             return Shapes.WithAlpha(cozyColor, (int)(cozyOpacity * 2.55f * factor));
         }
 
+        static Color[] CozyPalette() { return CozyPalettes[Math.Max(0, Math.Min(CozyPalettes.Length - 1, Config.CozyPalette))]; }
+
         static string ColorName(Color c)
         {
+            for (int i = 0; i < Theme.CozyBasic.Length; i++)
+                if (Theme.CozyBasic[i].ToArgb() == c.ToArgb()) return BasicNames[i];
             for (int i = 0; i < Theme.Cozy.Length; i++)
                 if (Theme.Cozy[i].ToArgb() == c.ToArgb()) return CozyNames[i];
             return "Minha cor";
@@ -471,8 +482,11 @@ namespace Pintinho
             Section(g, secOpa, "OPACIDADE", cozyOpacity + "%");
             DrawSlider(g, opacityTrack, (cozyOpacity - 10) / 90f);
 
-            Section(g, secPal, "PALETA PASTEL", null);
-            for (int i = 0; i < palR.Length; i++) DrawSwatch(g, palR[i], Theme.Cozy[i], cozyColor, 1.5f * sc, 3 * sc);
+            Section(g, secPal, "PALETA", null);
+            RoundBox(g, palChip, palChip.Height / 2f, theme.Surface, theme.Borda, 1);
+            DrawText(g, Theme.CozyPaletteNames[Config.CozyPalette] + "  ▾", sectionFont, theme.Ink, palChip, CenterFmt);
+            Color[] pal = CozyPalette();
+            for (int i = 0; i < palR.Length; i++) DrawSwatch(g, palR[i], pal[i], cozyColor, 1.5f * sc, 3 * sc);
             Section(g, secRec, "RECENTES", null);
             for (int i = 0; i < recentR.Length && i < recent.Count; i++) DrawSwatch(g, recentR[i], recent[i], Color.Empty, 1.5f * sc, 0);
         }
@@ -724,8 +738,15 @@ namespace Pintinho
             if (cozySide.Contains(p))
             {
                 if (plusR.Contains(p) || colorBig.Contains(p)) { OpenMixer(); return; }
+                if (palChip.Contains(p))
+                {
+                    Config.CozyPalette = (Config.CozyPalette + 1) % CozyPalettes.Length;
+                    Config.Save();
+                    Invalidate(cozySide);
+                    return;
+                }
                 for (int i = 0; i < palR.Length; i++)
-                    if (Rectangle.Inflate(palR[i], R(4), R(4)).Contains(p)) { SetCozyColor(Theme.Cozy[i]); return; }
+                    if (Rectangle.Inflate(palR[i], R(4), R(4)).Contains(p)) { SetCozyColor(CozyPalette()[i]); return; }
                 for (int i = 0; i < recentR.Length && i < recent.Count; i++)
                     if (Rectangle.Inflate(recentR[i], R(4), R(4)).Contains(p)) { SetCozyColor(recent[i]); return; }
                 if (Rectangle.Inflate(sizeTrack, R(4), R(10)).Contains(p))

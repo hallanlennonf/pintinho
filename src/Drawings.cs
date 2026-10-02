@@ -19,6 +19,7 @@ namespace Pintinho
     //   SE cx cy rx ry rot   elipse sólida girada
     //   L x1 y1 x2 y2   linha                  W k      multiplica a espessura da caneta
     //   E cx cy rx ry   elipse                 D x y r  bolinha preenchida com a cor da linha
+    //   STAR cx cy r    estrela sólida         HEART cx cy r  coração sólido
     // Os desenhos do Aconchego usam o espaço 200x200 (folha quadrada).
     static partial class Drawings
     {
@@ -83,7 +84,167 @@ namespace Pintinho
                 "L 20 84 182 84\nSC 55 100 16\nC 55 100 6\nSC 148 100 16\nC 148 100 6"),
             new Item("escavadeira", "Escavadeira",
                 "W 2.5\nP M92 62 L148 24 L180 62\nW 1\nS M172 60 L194 60 L188 88 L164 82 Z\n" +
-                "SR 38 46 58 48 4\nR 48 54 26 20 3\nSR 18 94 114 28 14\nC 34 108 7\nC 60 108 7\nC 88 108 7\nC 116 108 7")
+                "SR 38 46 58 48 4\nR 48 54 26 20 3\nSR 18 94 114 28 14\nC 34 108 7\nC 60 108 7\nC 88 108 7\nC 116 108 7"),
+            new Item("corrida", "Carro de corrida", @"
+L 5 120 195 120
+P M10 62 H32
+P M4 74 H24
+SR 156 66 30 7 2
+L 166 73 166 84
+L 178 73 178 85
+S M14 102 L20 86 L58 80 L78 64 H118 L130 80 L176 84 Q192 88 190 102 Z
+P M86 69 H114 L122 80 H80 Z
+SC 96 92 9
+P M93 88 L97 86 V98
+SC 46 103 17
+C 46 103 7
+SC 156 103 17
+C 156 103 7
+"),
+            new Item("lixo", "Caminhão de lixo", @"
+L 5 124 195 124
+SR 12 32 34 9 2
+SR 14 40 116 66 6
+L 14 62 130 62
+C 72 84 13
+P M66 84 L72 77 L78 84
+SR 160 40 12 10 2
+S M130 106 V50 H162 Q178 56 184 80 V106 Z
+P M137 57 H160 Q170 64 174 78 H137 Z
+SC 40 110 14
+C 40 110 5
+SC 100 110 14
+C 100 110 5
+SC 160 110 14
+C 160 110 5
+"),
+            new Item("guincho", "Guincho", @"
+L 5 124 195 124
+W 2
+P M40 84 L64 40 H100
+W 1
+L 100 40 100 72
+P M94 72 Q100 84 106 72
+SR 20 84 110 20 4
+SR 146 44 14 10 2
+S M128 104 V54 H160 Q176 60 182 84 V104 Z
+P M135 61 H158 Q168 68 172 82 H135 Z
+SC 50 110 14
+C 50 110 5
+SC 158 110 14
+C 158 110 5
+"),
+            new Item("submarino", "Submarino", @"
+P M0 14 Q25 6 50 14 T100 14 T150 14 T200 14
+L 102 38 102 22
+L 102 22 114 22
+SR 82 38 40 22 4
+S M174 80 L192 64 V96 Z
+S M30 80 Q30 56 60 56 H140 Q172 56 176 80 Q172 104 140 104 H60 Q30 104 30 80 Z
+C 64 80 9
+C 100 80 9
+C 136 80 9
+C 186 48 4
+C 192 38 3
+C 182 32 2.5
+S M24 124 Q36 114 48 124 Q36 134 24 124 Z
+SG 24,124 16,117 16,131
+D 42 122 1.5
+P M168 140 Q160 128 168 118 Q176 108 168 98
+"),
+            new Item("balao", "Balão", @"
+S M8 104 Q8 94 20 95 Q26 86 36 91 Q46 90 46 100 Q46 108 38 108 H14 Q8 108 8 104 Z
+S M150 36 Q150 26 162 27 Q168 18 178 23 Q188 22 188 32 Q188 40 180 40 H156 Q150 40 150 36 Z
+S M100 8 Q144 8 146 44 Q146 70 118 90 H82 Q54 70 54 44 Q56 8 100 8 Z
+P M100 8 Q80 40 86 90
+P M100 8 Q120 40 114 90
+P M57 48 Q100 58 143 48
+L 86 90 90 110
+L 114 90 110 110
+SR 86 110 28 20 3
+L 86 118 114 118
+P M156 100 Q161 95 166 100 Q171 95 176 100
+"),
+            new Item("bicicleta", "Bicicleta", @"
+L 5 130 195 130
+C 50 102 26
+C 50 102 4
+C 150 102 26
+C 150 102 4
+P M50 102 L80 62 H130 L150 102
+P M80 62 L100 102 L130 62
+L 100 102 50 102
+C 100 102 7
+L 72 54 92 54
+L 82 54 80 62
+P M130 62 L126 46 H140
+"),
+            new Item("monster", "Monster truck", @"
+L 5 134 195 134
+S M24 80 V62 L48 58 L64 34 H128 L148 58 L178 62 V80 Z
+P M70 40 L58 56 H96 V40 Z
+P M104 40 H124 L140 56 H104 Z
+P M30 72 Q40 64 50 72 Q58 64 66 72
+L 60 80 56 88
+L 140 80 144 88
+SC 50 108 26
+C 50 108 9
+SC 150 108 26
+C 150 108 9
+"),
+            new Item("jipe", "Jipe", @"
+L 5 124 195 124
+SC 14 84 12
+C 14 84 5
+S M20 102 V72 H60 L70 44 H130 V72 H178 V102 Z
+P M78 50 H122 V68 H72 Z
+L 100 50 100 68
+C 170 82 5
+L 20 86 178 86
+SC 54 106 16
+C 54 106 6
+SC 148 106 16
+C 148 106 6
+"),
+            new Item("navio", "Navio", @"
+C 176 24 11
+SR 70 36 18 30 2
+SR 104 30 18 36 2
+L 70 46 88 46
+L 104 42 122 42
+S M80 26 Q76 16 86 16 Q90 8 100 14 Q108 14 106 22 Q104 28 96 26 H84 Q80 28 80 26 Z
+SR 50 64 100 26 3
+R 60 70 14 12 2
+R 82 70 14 12 2
+R 104 70 14 12 2
+R 126 70 14 12 2
+S M20 90 H180 L164 118 H36 Z
+L 28 100 172 100
+C 60 108 4
+C 100 108 4
+C 140 108 4
+P M0 124 Q20 116 40 124 T80 124 T120 124 T160 124 T200 124
+"),
+            new Item("disco", "Disco voador", @"
+C 28 26 10
+E 28 26 17 4
+STAR 172 24 9
+STAR 150 50 6
+STAR 40 66 6
+S M62 70 Q62 38 100 38 Q138 38 138 70 Z
+C 100 54 9
+D 97 53 1.6
+D 103 53 1.6
+L 96 46 92 40
+L 104 46 108 40
+S M20 76 Q20 62 100 62 Q180 62 180 76 Q180 92 100 92 Q20 92 20 76 Z
+C 50 80 5
+C 75 85 5
+C 100 86 5
+C 125 85 5
+C 150 80 5
+P M82 92 L66 134 H134 L118 92
+")
         };
 
         static readonly Regex Number = new Regex(@"-?[0-9]*\.?[0-9]+");
@@ -128,6 +289,20 @@ namespace Pintinho
             return p;
         }
 
+        // Coração centrado em (cx, cy) com "raio" r.
+        static GraphicsPath Heart(float cx, float cy, float r)
+        {
+            GraphicsPath p = SvgPath.Parse("M5 8.8 C1 6 0.8 3.8 2 2.6 C3.2 1.4 4.6 2 5 3.2 C5.4 2 6.8 1.4 8 2.6 C9.2 3.8 9 6 5 8.8 Z");
+            float k = r / 4f;
+            using (Matrix m = new Matrix())
+            {
+                m.Translate(cx - 5 * k, cy - 5.2f * k);
+                m.Scale(k, k);
+                p.Transform(m);
+            }
+            return p;
+        }
+
         // Apaga o que estiver atrás da forma e desenha o contorno.
         static void Solid(Graphics g, Pen pen, GraphicsPath path)
         {
@@ -152,6 +327,13 @@ namespace Pintinho
                 string kind = solid ? op.Substring(1) : op;
 
                 if (op == "W") { pen.Width = baseWidth * Nums(arg)[0]; continue; }
+                if (op == "STAR" || op == "HEART")
+                {
+                    float[] n = Nums(arg);
+                    using (GraphicsPath shape = op == "STAR" ? Shapes.Star(n[0], n[1], n[2], n[2] * 0.45f, 5) : Heart(n[0], n[1], n[2]))
+                        Solid(g, pen, shape);
+                    continue;
+                }
                 if (op == "D")
                 {
                     float[] n = Nums(arg);

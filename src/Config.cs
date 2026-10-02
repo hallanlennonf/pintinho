@@ -16,6 +16,7 @@ namespace Pintinho
         public const int MaxMyColors = 8;
 
         public static bool DarkTheme;
+        public static int CozyPalette; // 0 = Básica
         public static readonly List<Color> MyColors = new List<Color>();
 
         public static void Load()
@@ -29,6 +30,7 @@ namespace Pintinho
                     if (eq < 0) continue;
                     string key = line.Substring(0, eq).Trim(), val = line.Substring(eq + 1).Trim();
                     if (key == "tema") DarkTheme = val == "escuro";
+                    else if (key == "paleta") { int.TryParse(val, out CozyPalette); if (CozyPalette < 0 || CozyPalette > 3) CozyPalette = 0; }
                     else if (key == "minhascores")
                     {
                         MyColors.Clear();
@@ -52,6 +54,7 @@ namespace Pintinho
                 Directory.CreateDirectory(Dir);
                 StringBuilder sb = new StringBuilder();
                 sb.Append("tema=").Append(DarkTheme ? "escuro" : "claro").Append("\r\n");
+                sb.Append("paleta=").Append(CozyPalette).Append("\r\n");
                 sb.Append("minhascores=");
                 for (int i = 0; i < MyColors.Count; i++)
                 {
