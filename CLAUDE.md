@@ -26,6 +26,8 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
 - Saída AnyCPU → roda em 32 e 64 bits. Fontes em UTF-8 (`/codepage:65001`).
 - Instalador: **Inno Setup 6** (instalado no PC de desenvolvimento via winget, em
   `%LOCALAPPDATA%\Programs\Inno Setup 6`). Instala por usuário (sem admin).
+- Commits são assinados com GPG (Gpg4win). Fazer `git commit` pelo **PowerShell** (pelo Git Bash o
+  gpg não acha o agente). Só criar a release depois do commit/push dar certo.
 - Os `.bat` precisam de quebra de linha CRLF (ver `.gitattributes`). Neste PC o `cmd` não roda
   programas da pasta atual sem caminho → usar `"%~dp0arquivo.bat"`.
 

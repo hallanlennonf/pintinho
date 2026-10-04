@@ -15,6 +15,8 @@ namespace Pintinho
 
     class Gate
     {
+        static int nextId = 1;
+        public readonly int Id = nextId++;
         public float Y;
         public int[] Kind = new int[2], Val = new int[2], Hits = new int[2];
         public bool Alive = true;
@@ -51,6 +53,7 @@ namespace Pintinho
         public readonly List<Particle> Particles = new List<Particle>();
         public readonly List<string> Picked = new List<string>();
         public readonly float[] BX = new float[MaxBullets], BY = new float[MaxBullets], BVX = new float[MaxBullets], BDmg = new float[MaxBullets];
+        readonly int[] BGate = new int[MaxBullets]; // última plaquinha que o jato já contou
         public int BulletCount;
 
         readonly Random rnd;
@@ -183,6 +186,7 @@ namespace Pintinho
                     BY[b] = y - 28;
                     BVX[b] = (float)Math.Sin(a) * BulletSpeed;
                     BDmg[b] = Damage * mul;
+                    BGate[b] = 0;
                 }
             }
         }
@@ -278,30 +282,32 @@ namespace Pintinho
             {
                 float x = BX[b] + BVX[b] * dt, y = BY[b] - BulletSpeed * dt;
                 bool alive = y > -20 && x > 0 && x < W;
-                if (alive && HitGate(x, y)) alive = false;
+                if (alive) HitGate(x, y, b); // o jato atravessa a plaquinha
                 if (alive && HitEnemy(x, y, BDmg[b])) alive = false;
                 if (!alive) continue;
-                BX[n] = x; BY[n] = y; BVX[n] = BVX[b]; BDmg[n] = BDmg[b];
+                BX[n] = x; BY[n] = y; BVX[n] = BVX[b]; BDmg[n] = BDmg[b]; BGate[n] = BGate[b];
                 n++;
             }
             BulletCount = n;
         }
 
-        bool HitGate(float x, float y)
+        // Conta o acerto na plaquinha (uma vez por jato); o jato segue em frente.
+        void HitGate(float x, float y, int b)
         {
             foreach (Gate g in Gates)
             {
                 if (y < g.Y - GateHalf || y > g.Y + GateHalf) continue;
+                if (BGate[b] == g.Id) return;
                 int side = x < W / 2 ? 0 : 1;
-                if (x < GateLeft[side] || x > GateLeft[side] + GateWidth) return false;
+                if (x < GateLeft[side] || x > GateLeft[side] + GateWidth) return;
+                BGate[b] = g.Id;
                 if (g.Kind[side] == GUnits)
                 {
                     g.Hits[side]++;
                     if (g.Hits[side] >= 6 && g.Val[side] < GateCap()) { g.Hits[side] = 0; g.Val[side]++; }
                 }
-                return true;
+                return;
             }
-            return false;
         }
 
         bool HitEnemy(float x, float y, float dmg)
