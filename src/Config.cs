@@ -17,6 +17,11 @@ namespace Pintinho
 
         public static bool DarkTheme;
         public static int CozyPalette; // 0 = Básica
+
+        // Joguinho Comboio: moedas, recorde e níveis da oficina
+        // (frota, dano, cadência, jatos, ímã, para-choque)
+        public static int GameCoins, GameRecordWave, GameRecordScore;
+        public static readonly int[] GameUpg = new int[6];
         public static readonly List<Color> MyColors = new List<Color>();
 
         public static void Load()
@@ -31,6 +36,16 @@ namespace Pintinho
                     string key = line.Substring(0, eq).Trim(), val = line.Substring(eq + 1).Trim();
                     if (key == "tema") DarkTheme = val == "escuro";
                     else if (key == "paleta") { int.TryParse(val, out CozyPalette); if (CozyPalette < 0 || CozyPalette > 3) CozyPalette = 0; }
+                    else if (key == "jogo")
+                    {
+                        string[] p = val.Split(',');
+                        int v;
+                        if (p.Length > 0 && int.TryParse(p[0], out v)) GameCoins = v;
+                        if (p.Length > 1 && int.TryParse(p[1], out v)) GameRecordWave = v;
+                        if (p.Length > 2 && int.TryParse(p[2], out v)) GameRecordScore = v;
+                        for (int i = 0; i < GameUpg.Length && i + 3 < p.Length; i++)
+                            if (int.TryParse(p[i + 3], out v)) GameUpg[i] = v;
+                    }
                     else if (key == "minhascores")
                     {
                         MyColors.Clear();
@@ -55,6 +70,9 @@ namespace Pintinho
                 StringBuilder sb = new StringBuilder();
                 sb.Append("tema=").Append(DarkTheme ? "escuro" : "claro").Append("\r\n");
                 sb.Append("paleta=").Append(CozyPalette).Append("\r\n");
+                sb.Append("jogo=").Append(GameCoins).Append(',').Append(GameRecordWave).Append(',').Append(GameRecordScore);
+                foreach (int u in GameUpg) sb.Append(',').Append(u);
+                sb.Append("\r\n");
                 sb.Append("minhascores=");
                 for (int i = 0; i < MyColors.Count; i++)
                 {

@@ -8,7 +8,9 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
 - **Aconchego** — para adultos (a esposa), no estilo "Bobbie Goods": desenhos fofos e detalhados,
   zoom de pinça, mais ferramentas, 16 desenhos. ⚠️ "Bobbie Goods" é marca registrada: usar só o *estilo*, com
   desenhos e nome próprios. "Aconchego" é nome provisório.
-- **Joguinhos** — futuro (aparece como "Em breve").
+- **Joguinhos** — por enquanto um jogo: **Comboio** (adultos), shooter de hordas: frota de
+  caminhões de bombeiro vs. gosmas, plaquinhas (+N/×2 caminhões, dano, cadência, jato, para-choque),
+  chefão a cada 5 ondas, moedas → Oficina (melhorias permanentes), recorde.
 Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
 
 ## Hardware alvo (restrição principal)
@@ -49,11 +51,14 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
   `api.github.com/repos/hallanlennonf/pintinho/releases`, pega a mais nova que tem um asset
   `*Setup*.exe`, compara com `AppInfo.Version`, baixa e roda `/VERYSILENT`. O app fecha; o
   instalador espera o mutex `PintinhoAppMutex` sumir e reabre o app. Também verifica sozinho 4s
-  depois de abrir (mostra aviso na tela inicial).
+  depois de abrir (mostra aviso na tela inicial). ✅ Testado no tablet de verdade (0.2.0 → 0.3.0)
+  em 2026-10-02: funcionou.
+- Próximo passo combinado: pacote de desenhos baixável do GitHub (sem precisar de versão nova).
 
 ## Arquitetura (src/)
 - `Program.cs` — entrada, argumentos, mutex, log (`%LOCALAPPDATA%\Pintinho\erros.log`).
-- `Config.cs` — `%LOCALAPPDATA%\Pintinho\config.txt`: tema, "minhas cores".
+- `Config.cs` — `%LOCALAPPDATA%\Pintinho\config.txt`: tema, paleta, "minhas cores", jogo (moedas,
+  recorde, níveis da oficina).
 - `Theme.cs` — 4 temas (Infantil claro/escuro, Aconchego claro/escuro) + paletas. Aconchego tem 4
   paletas de 24 cores (Básica = padrão, Pastel, Terra, Pele e cabelo); a escolhida fica no config.
 - `MainForm.cs` — núcleo: telas (`Screen`), sobreposições (`Overlay`), layout, pintura, cadeado,
@@ -67,7 +72,13 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
     categoria; pinça com dois dedos).
   - `Touch.cs` — multitoque via `WM_POINTER` (cada dedo = um `Contact` com papel: pintar, pinça,
     arrastar, cadeado). Mouse entra como id -1.
+  - `GameScreen.cs` — Comboio: menu, partida, pausa, fim, oficina. Laço próprio via
+    `Application.Idle` + `PeekMessage` (lógica em passos fixos de 1/60 s, render até 60 fps num
+    `BufferedGraphics` só da estrada; HUD redesenhado no máximo a cada 0,2 s). Sprites
+    pré-renderizados (PArgb + `DrawImageUnscaled`), sem antialias na estrada. Contador de fps no canto.
+    Se no Atom ficar < ~45 fps, plano B: desenhar a estrada com WPF (GPU).
   - `Capture.cs` — modo `--captura`.
+- `Game.cs` — lógica pura do Comboio (espaço 760 x H; ondas, inimigos, tiros, plaquinhas, partículas).
 - `Surface.cs` — tinta + contorno + máscara do balde; desfazer/refazer; `StrokePath` (traço
   transparente sem acumular tinta); balde com opacidade; conta-gotas.
 - `Drawings.cs` / `DrawingsCozy.cs` — desenhos numa mini-linguagem (um comando por linha; `S*` =
@@ -93,7 +104,8 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
 - Testar no tablet de verdade: multitoque, pinça, desempenho do balde e do zoom no Atom, rotação,
   instalador e atualização automática.
 - Mais desenhos (Aconchego e veículos); pacote de desenhos baixável sem nova versão do app.
-- Joguinhos (labirinto, ligue os pontos, memória).
+- Comboio: testar fps e balanceamento no tablet; sons; mais tipos de gosma.
+- Mais joguinhos (labirinto, ligue os pontos, memória) — talvez uma tela de escolha de jogo.
 - Sons; abrir desenhos salvos para continuar; Aconchego com folha retrato.
 - Bloquear gestos de borda do Windows 10 no modo tablet.
 

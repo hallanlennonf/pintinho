@@ -112,6 +112,7 @@ namespace Pintinho
                 case Screen.Inicio: HomeDown(p); break;
                 case Screen.Infantil: KidsDown(c, p); break;
                 case Screen.Aconchego: CozyDown(c, p); break;
+                case Screen.Jogo: GameDown(c, p); break;
             }
         }
 

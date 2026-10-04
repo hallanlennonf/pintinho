@@ -51,8 +51,8 @@ namespace Pintinho
                 "Infantil", "3+ anos", "Veículos para colorir, botões grandes e balde mágico.", kidsGallery.Items[2], false);
             DrawHomeCard(g, homeCards[1], CozyCardBg, CozyCardBorder, CozyCardInk, Color.White, CozyCardInk, false,
                 "Aconchego", "Adultos", "Desenhos fofos e cheios de detalhes para relaxar, com zoom de pinça.", cozyGallery.Items[1], true);
-            DrawHomeCard(g, homeCards[2], theme.Panel, theme.Borda, theme.Muted, theme.Borda, theme.Ink, true,
-                "Joguinhos", "Em breve", "Labirintos, ligue os pontos, memória e mais.", null, false);
+            DrawHomeCard(g, homeCards[2], GRoad, Shapes.Hex(0xffc727), Shapes.Hex(0xf5ecdc), Shapes.Hex(0xffc727), Shapes.Hex(0x2b2118), false,
+                "Joguinhos", "Novo", "Comboio: segure a horda de gosmas com sua frota de bombeiros.", null, false);
 
             DrawText(g, "v" + AppInfo.Version + " alpha", smallFont, theme.Muted, new RectangleF(R(32), view.Height - R(52), R(300), R(28)), LeftFmt);
             DrawLockButton(g, homeLock, 18 * sc);
@@ -89,7 +89,8 @@ namespace Pintinho
                 descR = new RectangleF(titleR.X, titleR.Bottom + R(16), titleR.Width, r.Bottom - titleR.Bottom - R(16) - pad);
             }
 
-            RoundBox(g, img, 18 * sc, dashed ? theme.Surface : Color.White, Color.White, 0);
+            bool gameCard = art == null;
+            RoundBox(g, img, 18 * sc, gameCard ? Shapes.Hex(0x1c1f24) : Color.White, Color.White, 0);
             if (art != null)
             {
                 float k = Math.Min(img.Width * 0.92f / (square ? 1f : 1.43f), img.Height * 0.92f);
@@ -99,8 +100,18 @@ namespace Pintinho
             }
             else
             {
-                float s = Math.Min(img.Width, img.Height) * 0.8f;
-                Icons.Draw(g, "controle", new RectangleF(img.X + (img.Width - s) / 2f, img.Y + (img.Height - s) / 2f, s, s), ink, ink, theme, 0);
+                // mini cena do Comboio
+                GraphicsState st = g.Save();
+                g.SetClip(img);
+                float cx = img.X + img.Width / 2f;
+                g.DrawImageUnscaled(spSmall, (int)(cx - img.Width * 0.3f) - spSmall.Width / 2, img.Y + img.Height / 4 - spSmall.Height / 2);
+                g.DrawImageUnscaled(spBig, (int)cx - spBig.Width / 2, img.Y + img.Height / 5 - spBig.Height / 2);
+                g.DrawImageUnscaled(spSmall, (int)(cx + img.Width * 0.3f) - spSmall.Width / 2, img.Y + img.Height / 3 - spSmall.Height / 2);
+                for (int i = 0; i < 3; i++)
+                    g.DrawImageUnscaled(spBullet, (int)(cx + (i - 1) * 40 * fs) - spBullet.Width / 2, img.Y + img.Height / 2 + (i == 1 ? -R(10) : 0));
+                for (int i = 0; i < 3; i++)
+                    g.DrawImageUnscaled(spTruck, (int)(cx + (i - 1) * 40 * fs) - spTruck.Width / 2, img.Bottom - spTruck.Height + R(4));
+                g.Restore(st);
             }
 
             DrawText(g, title, cardTitleFont, ink, titleR, LeftFmt);
@@ -134,7 +145,7 @@ namespace Pintinho
         {
             if (homeCards[0].Contains(p)) GoTo(Screen.Infantil);
             else if (homeCards[1].Contains(p)) GoTo(Screen.Aconchego);
-            else if (homeCards[2].Contains(p)) ShowToast("Joguinhos chegam em breve!");
+            else if (homeCards[2].Contains(p)) GoTo(Screen.Jogo);
         }
 
         // ---------- galeria ----------

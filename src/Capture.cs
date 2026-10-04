@@ -63,6 +63,33 @@ namespace Pintinho
                 DoLayout(Port);
                 Shot("aconchego-retrato-claro");
 
+                // joguinho
+                screen = Screen.Jogo; UpdateTheme(); DoLayout(Land);
+                Config.GameCoins = 1240; Config.GameRecordWave = 12; Config.GameRecordScore = 48300;
+                Config.GameUpg[0] = 2; Config.GameUpg[1] = 1; Config.GameUpg[2] = 3; Config.GameUpg[3] = 1; Config.GameUpg[5] = 3;
+                gstate = GState.Menu; Shot("jogo-menu");
+                gstate = GState.Shop; Shot("jogo-oficina");
+                game = new Game(Config.GameUpg, 7);
+                game.H = gameH;
+                gstate = GState.Play;
+                for (int i = 0; i < 60 * 40; i++)
+                {
+                    game.SquadTarget = Game.W / 2 + (float)Math.Sin(i / 90.0) * 200;
+                    if (game.Units < 12) game.Units = 12;
+                    game.Step(1 / 60f);
+                }
+                gFps = 60;
+                Shot("jogo-partida");
+                gstate = GState.Pause; Shot("jogo-pausa");
+                game.Over = true; lastCoins = game.Coins; newRecord = true;
+                gstate = GState.Over; Shot("jogo-fim");
+                DoLayout(Port);
+                game.Over = false; gstate = GState.Play; Shot("jogo-partida-retrato");
+                game = null; gstate = GState.Menu; Shot("jogo-menu-retrato");
+                screen = Screen.Inicio; UpdateTheme(); DoLayout(Land);
+                Shot("inicio-com-jogo");
+                screen = Screen.Aconchego; UpdateTheme();
+
                 // área dos pais
                 DoLayout(Land);
                 overlay = Overlay.Pais;
