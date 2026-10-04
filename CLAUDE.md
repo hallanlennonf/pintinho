@@ -79,6 +79,11 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
     `BufferedGraphics` só da estrada; HUD redesenhado no máximo a cada 0,2 s). Sprites
     pré-renderizados (PArgb + `DrawImageUnscaled`), sem antialias na estrada. Contador de fps no canto.
     Se no Atom ficar < ~45 fps, plano B: desenhar a estrada com WPF (GPU).
+  - Dificuldade: constantes no topo de `Game` (HpGrowth, HpPerUnit, SpeedPerWave, DamageExponent);
+    oficina de dano/cadência **multiplica** o jato. Ajustar com o jogador automático:
+    `Pintinho.exe --simular resultado.txt` (`Sim.cs`, 12 partidas por perfil de oficina).
+    v0.4.2: zerada ≈ onda 11, média ≈ 14, máxima ≈ 16 (o bot joga "perfeito"; humano morre antes).
+    Usuário achou a v0.4.1 fácil demais (não perdia depois da onda 4).
   - `Capture.cs` — modo `--captura`.
 - `Game.cs` — lógica pura do Comboio (espaço 760 x H; ondas, inimigos, tiros, plaquinhas, partículas).
 - `Surface.cs` — tinta + contorno + máscara do balde; desfazer/refazer; `StrokePath` (traço

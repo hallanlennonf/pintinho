@@ -59,9 +59,21 @@ namespace Pintinho
         readonly Random rnd;
         int toSmall, toBig;
         bool bossPending;
+        int smallAtStart;
+        float shopDamage = 1, shopRate = 1;
+        public float EffectiveDamage { get { return Damage * shopDamage; } }
+        public float EffectiveRate { get { return Rate * shopRate; } }
         float spawnTimer, gateTimer, fireTimer, waveDelay;
 
         public int Coins { get { return (int)CoinsF; } }
+
+        // ---- dificuldade (ajustada com o jogador automático do modo --simular) ----
+        public static float HpGrowth = 1.36f;      // vida multiplica por onda
+        public static float HpPerUnit = 0.015f;     // +3% de vida por caminhão na frota
+        public static float SpeedPerWave = 9f;     // velocidade extra de descida por onda
+        public static float DamageExponent = 0.7f; // frota acima de 24: dano cresce menos que linear
+
+        float HpMul() { return (float)Math.Pow(HpGrowth, Wave - 1) * (1 + HpPerUnit * Units); }
         // primeira fileira da frota; as outras ficam embaixo dela
         public float SquadY { get { return H - 70 - (Rows() - 1) * 50; } }
         public float SquadTop { get { return SquadY - 30; } }
@@ -72,8 +84,10 @@ namespace Pintinho
         {
             rnd = new Random(seed);
             Units = 1 + upg[0];
-            Damage = 1 + upg[1];
-            Rate = 2f * (1 + 0.15f * upg[2]);
+            Damage = 1;
+            Rate = 2f;
+            shopDamage = 1 + 0.5f * upg[1]; // oficina multiplica o jato inteiro (vale mesmo depois das plaquinhas)
+            shopRate = 1 + 0.15f * upg[2];
             Jets = 1 + upg[3];
             CoinBonus = 0.2f * upg[4];
             ShieldMax = upg[5];
@@ -86,13 +100,14 @@ namespace Pintinho
         {
             Wave = k;
             Shield = ShieldMax;
-            toSmall = 10 + 4 * k;
-            toBig = k / 2 + (k >= 3 ? 1 : 0);
+            toSmall = 6 + 6 * k;
+            toBig = k / 2 + k / 4 + (k >= 3 ? 1 : 0);
             bossPending = k % 5 == 0;
             WaveTotal = toSmall + toBig + (bossPending ? 1 : 0);
+            smallAtStart = toSmall;
             WaveDone = 0;
             spawnTimer = 0.8f;
-            if (k == 1) gateTimer = 4f;
+            if (k == 1) gateTimer = 2.5f;
             Banner = 2.2f;
             BannerText = bossPending ? "Onda " + k + " · CHEFÃO!" : "Onda " + k;
         }
@@ -100,7 +115,7 @@ namespace Pintinho
         public int Rows() { return (Display + Columns() - 1) / Columns(); }
 
         // teto do número de uma plaquinha de caminhões (atirar nela aumenta até aqui)
-        public int GateCap() { return 3 + 2 * Wave; }
+        public int GateCap() { return 3 + Wave; }
 
         public int Columns()
         {
@@ -129,7 +144,7 @@ namespace Pintinho
             fireTimer -= dt;
             if (fireTimer <= 0)
             {
-                fireTimer += 1f / Rate;
+                fireTimer += 1f / EffectiveRate;
                 if (fireTimer < 0) fireTimer = 0;
                 Fire();
             }
@@ -146,7 +161,7 @@ namespace Pintinho
                 if (pending && spawnTimer <= 0)
                 {
                     SpawnEnemy();
-                    spawnTimer = Math.Max(0.16f, 0.85f - Wave * 0.04f) * (0.6f + R01() * 0.8f);
+                    spawnTimer = Math.Max(0.12f, 0.95f - Wave * 0.06f) * (0.6f + R01() * 0.8f);
                 }
                 if (!pending && Enemies.Count == 0)
                 {
@@ -172,7 +187,8 @@ namespace Pintinho
         void Fire()
         {
             int d = Display;
-            float mul = Units / (float)Math.Max(1, d); // frota grande: cada jato vale mais
+            // frota maior que o desenhado: cada jato vale mais, mas cresce menos que linear
+            float mul = (float)Math.Pow(Units / (float)Math.Max(1, d), DamageExponent);
             for (int i = 0; i < d; i++)
             {
                 float x, y;
@@ -185,7 +201,7 @@ namespace Pintinho
                     BX[b] = x;
                     BY[b] = y - 28;
                     BVX[b] = (float)Math.Sin(a) * BulletSpeed;
-                    BDmg[b] = Damage * mul;
+                    BDmg[b] = EffectiveDamage * mul;
                     BGate[b] = 0;
                 }
             }
@@ -195,31 +211,32 @@ namespace Pintinho
         {
             Enemy e = new Enemy();
             e.Phase = R01() * 6.28f;
-            float hpMul = (float)Math.Pow(1.17, Wave - 1); // cada onda fica ~17% mais resistente
+            float hpMul = HpMul();
+            float fast = SpeedPerWave * (Wave - 1);
             int total = toSmall + toBig;
-            if (bossPending && toSmall <= (10 + 4 * Wave) / 2)
+            if (bossPending && toSmall <= smallAtStart / 2)
             {
                 bossPending = false;
                 e.Kind = 2;
                 e.R = 64;
-                e.MaxHp = 60 * (Wave / 5f) * (1 + Wave * 0.3f) * hpMul;
-                e.Speed = 22;
+                e.MaxHp = 120 * (Wave / 5f) * (1 + Wave * 0.4f) * hpMul;
+                e.Speed = 24 + fast * 0.3f;
             }
             else if (toBig > 0 && (toSmall == 0 || rnd.Next(total) < toBig))
             {
                 toBig--;
                 e.Kind = 1;
                 e.R = 30;
-                e.MaxHp = (6 + Wave * 2f) * hpMul;
-                e.Speed = 30 + Wave * 2 + R01() * 10;
+                e.MaxHp = (10 + Wave * 4f) * hpMul;
+                e.Speed = Math.Min(180, 35 + fast * 0.7f + R01() * 10);
             }
             else if (toSmall > 0)
             {
                 toSmall--;
                 e.Kind = 0;
                 e.R = 18;
-                e.MaxHp = (1 + Wave * 0.5f) * hpMul;
-                e.Speed = 45 + Wave * 3 + R01() * 20;
+                e.MaxHp = (1 + (Wave - 1) * 0.9f) * hpMul;
+                e.Speed = Math.Min(260, 50 + fast + R01() * 25);
             }
             else return;
             e.Hp = e.MaxHp;
@@ -237,7 +254,7 @@ namespace Pintinho
             {
                 // caminhões: um lado bom, outro ruim (ou dobrar)
                 if (Units < 40 && R01() < 0.25f) { g.Kind[good] = GDouble; g.Val[good] = 2; }
-                else { g.Kind[good] = GUnits; g.Val[good] = 3 + rnd.Next(4) + Wave; }
+                else { g.Kind[good] = GUnits; g.Val[good] = 2 + rnd.Next(3) + Wave / 2; }
                 g.Kind[1 - good] = GUnits;
                 g.Val[1 - good] = -(2 + rnd.Next(4) + Wave / 2);
             }
@@ -347,7 +364,7 @@ namespace Pintinho
                 e.X += (float)Math.Sin(Time * 3 + e.Phase) * 10 * dt;
                 if (e.Y > H * 0.45f)
                 {
-                    float d = SquadX - e.X, step = 45 * dt;
+                    float d = SquadX - e.X, step = (45 + 3 * Wave) * dt;
                     e.X += Math.Abs(d) < step ? d : Math.Sign(d) * step;
                 }
                 if (e.Y + e.R * 0.6f < SquadTop) continue;
@@ -356,7 +373,7 @@ namespace Pintinho
                 Enemies.RemoveAt(i);
                 e.Alive = false;
                 WaveDone++;
-                int dmg = e.Kind == 0 ? 1 : e.Kind == 1 ? 3 : Math.Max(8, Units / 2);
+                int dmg = e.Kind == 0 ? 1 : e.Kind == 1 ? 2 + Wave / 3 : Math.Max(10, Units / 2);
                 if (Shield > 0)
                 {
                     Shield--;

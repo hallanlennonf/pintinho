@@ -492,7 +492,7 @@ namespace Pintinho
                 g.DrawImage(spTruck, new RectangleF(x, y, R(20), R(38)));
                 DrawText(g, game.Units + (game.Units == 1 ? " caminhão" : " caminhões"), buttonFont, theme.Ink, new RectangleF(x + R(30), y, w - R(30), R(38)), LeftFmt); y += R(58);
                 Label(g, "JATO D'ÁGUA", x, y, w); y += R(26);
-                string[,] rows = { { "Dano", game.Damage.ToString("0", Br) }, { "Cadência", game.Rate.ToString("0.0", Br) + " por segundo" }, { "Jatos", jets } };
+                string[,] rows = { { "Dano", game.EffectiveDamage.ToString("0.#", Br) }, { "Cadência", game.EffectiveRate.ToString("0.0", Br) + " por segundo" }, { "Jatos", jets } };
                 for (int i = 0; i < 3; i++)
                 {
                     DrawText(g, rows[i, 0], gStat, theme.Ink, new RectangleF(x, y, w, R(22)), LeftFmt);
@@ -552,7 +552,7 @@ namespace Pintinho
                     g.FillRectangle(b, gPause.X + gPause.Width / 2 - R(12), gPause.Y + R(19), R(8), R(26));
                     g.FillRectangle(b, gPause.X + gPause.Width / 2 + R(4), gPause.Y + R(19), R(8), R(26));
                 }
-                string line = "Recorde: onda " + Config.GameRecordWave + "   ·   Chefão " + boss + "   ·   Dano " + game.Damage.ToString("0", Br) + " · " + jets;
+                string line = "Recorde: onda " + Config.GameRecordWave + "   ·   Chefão " + boss + "   ·   Dano " + game.EffectiveDamage.ToString("0.#", Br) + " · " + jets;
                 DrawText(g, line, labelFont, theme.Ink, new RectangleF(R(20), gBottom.Y, view.Width - R(40), gBottom.Height), CenterFmt);
             }
         }
@@ -628,7 +628,7 @@ namespace Pintinho
             switch (i)
             {
                 case 0: return (1 + l) + (l == 0 ? " caminhão" : " caminhões");
-                case 1: return "dano " + (1 + l);
+                case 1: return "dano ×" + (1 + 0.5f * l).ToString("0.0", Br);
                 case 2: return (2f * (1 + 0.15f * l)).ToString("0.0", Br) + " por s";
                 case 3: return (1 + l) + (l == 0 ? " jato" : " jatos");
                 case 4: return "+" + (20 * l) + "%";

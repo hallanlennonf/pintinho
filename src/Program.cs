@@ -25,6 +25,13 @@ namespace Pintinho
                 else if (args[i] == "--icone" && i + 1 < args.Length) icon = args[++i];
             }
 
+            for (int i = 0; i + 1 < args.Length; i++)
+                if (args[i] == "--simular")
+                {
+                    Sim.Run(args[i + 1]);
+                    return;
+                }
+
             if (icon != null)
             {
                 AppIcon.Save(icon);
