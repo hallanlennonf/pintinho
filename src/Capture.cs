@@ -88,6 +88,26 @@ namespace Pintinho
                 game = null; gstate = GState.Menu; Shot("jogo-menu-retrato");
                 screen = Screen.Inicio; UpdateTheme(); DoLayout(Land);
                 Shot("inicio-com-jogo");
+
+                // escolha de jogo e cobrinha
+                Config.SnakeRecord = 118;
+                screen = Screen.Jogos; UpdateTheme(); DoLayout(Land); Shot("jogos-escolha");
+                DoLayout(Port); Shot("jogos-escolha-retrato");
+                screen = Screen.Cobra; UpdateTheme(); EnterSnake(); DoLayout(Land);
+                Shot("cobra-pronto");
+                sstate = SState.Jogando;
+                for (int i = 0; i < 400 && !snake.Over; i++)
+                {
+                    Point h = snake.Body[0];
+                    if (snake.Food.X != h.X) snake.Turn(snake.Food.X > h.X ? 1 : -1, 0);
+                    else snake.Turn(0, snake.Food.Y > h.Y ? 1 : -1);
+                    snake.Step();
+                }
+                sPressed[1] = 3;
+                Shot("cobra-paisagem");
+                DoLayout(Port); Shot("cobra-retrato");
+                sPressed.Clear();
+                snakeRecord = true; sstate = SState.Fim; DoLayout(Land); Shot("cobra-fim");
                 screen = Screen.Aconchego; UpdateTheme();
 
                 // área dos pais

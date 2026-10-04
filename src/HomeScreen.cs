@@ -52,7 +52,7 @@ namespace Pintinho
             DrawHomeCard(g, homeCards[1], CozyCardBg, CozyCardBorder, CozyCardInk, Color.White, CozyCardInk, false,
                 "Aconchego", "Adultos", "Desenhos fofos e cheios de detalhes para relaxar, com zoom de pinça.", cozyGallery.Items[1], true);
             DrawHomeCard(g, homeCards[2], GRoad, Shapes.Hex(0xffc727), Shapes.Hex(0xf5ecdc), Shapes.Hex(0xffc727), Shapes.Hex(0x2b2118), false,
-                "Joguinhos", "Novo", "Comboio: segure a horda de gosmas com sua frota de bombeiros.", null, false);
+                "Joguinhos", "Novo", "Comboio e Cobrinha: escolha um e bora jogar.", null, false);
 
             DrawText(g, "v" + AppInfo.Version + " alpha", smallFont, theme.Muted, new RectangleF(R(32), view.Height - R(52), R(300), R(28)), LeftFmt);
             DrawLockButton(g, homeLock, 18 * sc);
@@ -100,18 +100,7 @@ namespace Pintinho
             }
             else
             {
-                // mini cena do Comboio
-                GraphicsState st = g.Save();
-                g.SetClip(img);
-                float cx = img.X + img.Width / 2f;
-                g.DrawImageUnscaled(spSmall, (int)(cx - img.Width * 0.3f) - spSmall.Width / 2, img.Y + img.Height / 4 - spSmall.Height / 2);
-                g.DrawImageUnscaled(spBig, (int)cx - spBig.Width / 2, img.Y + img.Height / 5 - spBig.Height / 2);
-                g.DrawImageUnscaled(spSmall, (int)(cx + img.Width * 0.3f) - spSmall.Width / 2, img.Y + img.Height / 3 - spSmall.Height / 2);
-                for (int i = 0; i < 3; i++)
-                    g.DrawImageUnscaled(spBullet, (int)(cx + (i - 1) * 40 * fs) - spBullet.Width / 2, img.Y + img.Height / 2 + (i == 1 ? -R(10) : 0));
-                for (int i = 0; i < 3; i++)
-                    g.DrawImageUnscaled(spTruck, (int)(cx + (i - 1) * 40 * fs) - spTruck.Width / 2, img.Bottom - spTruck.Height + R(4));
-                g.Restore(st);
+                DrawComboioArt(g, img);
             }
 
             DrawText(g, title, cardTitleFont, ink, titleR, LeftFmt);
@@ -145,7 +134,7 @@ namespace Pintinho
         {
             if (homeCards[0].Contains(p)) GoTo(Screen.Infantil);
             else if (homeCards[1].Contains(p)) GoTo(Screen.Aconchego);
-            else if (homeCards[2].Contains(p)) GoTo(Screen.Jogo);
+            else if (homeCards[2].Contains(p)) GoTo(Screen.Jogos);
         }
 
         // ---------- galeria ----------

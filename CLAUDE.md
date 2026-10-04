@@ -8,7 +8,10 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
 - **Aconchego** — para adultos (a esposa), no estilo "Bobbie Goods": desenhos fofos e detalhados,
   zoom de pinça, mais ferramentas, 16 desenhos. ⚠️ "Bobbie Goods" é marca registrada: usar só o *estilo*, com
   desenhos e nome próprios. "Aconchego" é nome provisório.
-- **Joguinhos** — por enquanto um jogo: **Comboio** (adultos), shooter de hordas: frota de
+- **Joguinhos** — tela de escolha (`Screen.Jogos`) com 2 jogos. **Cobrinha**: snake clássica (grade
+  24x24, atravessa as bordas, morre ao morder o rabo), estilo LCD verde, paisagem e retrato, botões
+  para segurar com as duas mãos (dedão esquerdo ↑↓, direito ←→; viram ao encostar e ao deslizar).
+  **Comboio** (adultos), shooter de hordas: frota de
   caminhões de bombeiro vs. gosmas, plaquinhas (+N/×2 caminhões, dano, cadência, jato, para-choque),
   chefão a cada 5 ondas, moedas → Oficina (melhorias permanentes), recorde.
 Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
@@ -84,6 +87,8 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
     `Pintinho.exe --simular resultado.txt` (`Sim.cs`, 12 partidas por perfil de oficina).
     v0.4.2: zerada ≈ onda 11, média ≈ 14, máxima ≈ 16 (o bot joga "perfeito"; humano morre antes).
     Usuário achou a v0.4.1 fácil demais (não perdia depois da onda 4).
+  - `SnakeScreen.cs` — escolha de jogo (hub) + Cobrinha (timer de 15 ms acumulando o passo; `Snake.cs`
+    tem a lógica).
   - `Capture.cs` — modo `--captura`.
 - `Game.cs` — lógica pura do Comboio (espaço 760 x H; ondas, inimigos, tiros, plaquinhas, partículas).
 - `Surface.cs` — tinta + contorno + máscara do balde; desfazer/refazer; `StrokePath` (traço

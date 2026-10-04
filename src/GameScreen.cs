@@ -589,7 +589,7 @@ namespace Pintinho
             RoundBox(g, gBack, 14 * sc, theme.Panel, theme.Borda, 2 * sc);
             using (Pen p = Shapes.RoundPen(theme.Ink, 2.4f * sc))
                 g.DrawLines(p, new PointF[] { new PointF(gBack.X + R(26), gBack.Y + R(18)), new PointF(gBack.X + R(19), gBack.Y + R(26)), new PointF(gBack.X + R(26), gBack.Y + R(34)) });
-            DrawText(g, "Início", labelFont, theme.Ink, new RectangleF(gBack.X + R(40), gBack.Y, gBack.Width - R(48), gBack.Height), LeftFmt);
+            DrawText(g, "Voltar", labelFont, theme.Ink, new RectangleF(gBack.X + R(40), gBack.Y, gBack.Width - R(48), gBack.Height), LeftFmt);
 
             RoundBox(g, gCoins, gCoins.Height / 2f, theme.Panel, theme.Taxi, 2 * sc);
             Coin(g, gCoins.X + R(16), gCoins.Y + R(13), R(26));
@@ -761,7 +761,7 @@ namespace Pintinho
             switch (gstate)
             {
                 case GState.Menu:
-                    if (gBack.Contains(p)) GoTo(Screen.Inicio);
+                    if (gBack.Contains(p)) GoTo(Screen.Jogos);
                     else if (gPlay.Contains(p)) StartGame();
                     else if (gShop.Contains(p)) { gstate = GState.Shop; Invalidate(); }
                     break;

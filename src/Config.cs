@@ -22,6 +22,7 @@ namespace Pintinho
         // (frota, dano, cadência, jatos, ímã, para-choque)
         public static int GameCoins, GameRecordWave, GameRecordScore;
         public static readonly int[] GameUpg = new int[6];
+        public static int SnakeRecord;
         public static readonly List<Color> MyColors = new List<Color>();
 
         public static void Load()
@@ -46,6 +47,7 @@ namespace Pintinho
                         for (int i = 0; i < GameUpg.Length && i + 3 < p.Length; i++)
                             if (int.TryParse(p[i + 3], out v)) GameUpg[i] = v;
                     }
+                    else if (key == "cobra") int.TryParse(val, out SnakeRecord);
                     else if (key == "minhascores")
                     {
                         MyColors.Clear();
@@ -73,6 +75,7 @@ namespace Pintinho
                 sb.Append("jogo=").Append(GameCoins).Append(',').Append(GameRecordWave).Append(',').Append(GameRecordScore);
                 foreach (int u in GameUpg) sb.Append(',').Append(u);
                 sb.Append("\r\n");
+                sb.Append("cobra=").Append(SnakeRecord).Append("\r\n");
                 sb.Append("minhascores=");
                 for (int i = 0; i < MyColors.Count; i++)
                 {
