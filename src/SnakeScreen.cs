@@ -144,21 +144,22 @@ namespace Pintinho
                 sPause = new Rectangle(sField.X - R(24) - R(64), R(24), R(64), R(64));
                 sScoreR = new RectangleF(R(104), R(14), R(200), R(70));
                 sRecR = new RectangleF(R(104), R(92), R(200), R(54));
-                btn = Math.Min(R(130), (sField.X - R(64)) / 3);
-                cx = sField.X / 2;
-                cy = Math.Max(R(180) + btn * 3 / 2, H - R(48) - btn * 3 / 2);
+                // 20% menor, mais para a direita e encostada embaixo (perto do dedão)
+                btn = Math.Min(R(104), (sField.X - R(64)) / 3);
+                cx = Math.Min(sField.X / 2 + R(50), sField.X - R(14) - btn * 3 / 2 - gap);
+                cy = H - R(24) - btn * 3 / 2 - gap;
             }
             else
             {
                 // campo em cima; cruz de controle embaixo, no centro
-                btn = R(118);
-                int outer = Math.Min(W - R(40), H - R(110) - 3 * btn - R(90));
+                btn = R(94);
+                int outer = Math.Min(W - R(40), H - R(110) - 3 * btn - R(80));
                 sField = new Rectangle((W - outer) / 2, R(110), outer, outer);
                 sPause = new Rectangle(W - R(24) - R(64), R(24), R(64), R(64));
                 sScoreR = new RectangleF(R(104), R(14), R(200), R(70));
                 sRecR = new RectangleF(R(330), R(22), R(220), R(54));
-                cx = W / 2;
-                cy = sField.Bottom + (H - sField.Bottom) / 2;
+                cx = W / 2 + R(60);
+                cy = H - R(24) - btn * 3 / 2 - gap;
             }
             sPadCenter = new Point(cx, cy);
             sPadRadius = btn * 3 / 2 + gap + R(20);
