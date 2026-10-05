@@ -126,40 +126,46 @@ namespace Pintinho
         readonly Stopwatch snakeWatch = new Stopwatch();
         double snakeLast, snakeAcc;
         Font sScoreFont;
+        Point sPadCenter;
+        int sPadRadius;
 
         void LayoutSnake()
         {
             if (sScoreFont != null) sScoreFont.Dispose();
             sScoreFont = F(44, FontStyle.Bold);
-            int W = view.Width, H = view.Height, gap = R(16);
+            int W = view.Width, H = view.Height, gap = R(8);
             sBack = new Rectangle(R(24), R(24), R(56), R(56));
+            int btn, cx, cy;
             if (!portrait)
             {
-                int outer = Math.Min(H - R(80), W - 2 * R(280)), btn = R(130);
-                sField = new Rectangle((W - outer) / 2, (H - outer) / 2, outer, outer);
-                sPause = new Rectangle(W - R(24) - R(64), R(24), R(64), R(64));
-                sScoreR = new RectangleF(R(28), R(120), sField.X - R(40), R(70));
-                sRecR = new RectangleF(sField.Right + R(20), R(120), W - sField.Right - R(40), R(54));
-                int lx = (sField.X - btn) / 2, ly = H - R(40) - 2 * btn - gap;
-                sArrows[0] = new Rectangle(lx, ly, btn, btn);
-                sArrows[1] = new Rectangle(lx, ly + btn + gap, btn, btn);
-                int rx = sField.Right + (W - sField.Right - 2 * btn - gap) / 2, ry = H - R(60) - btn;
-                sArrows[2] = new Rectangle(rx, ry, btn, btn);
-                sArrows[3] = new Rectangle(rx + btn + gap, ry, btn, btn);
+                // campo à direita; cruz de controle à esquerda (dedão esquerdo)
+                int outer = Math.Min(H - R(80), W - R(560));
+                sField = new Rectangle(W - R(40) - outer, (H - outer) / 2, outer, outer);
+                sPause = new Rectangle(sField.X - R(24) - R(64), R(24), R(64), R(64));
+                sScoreR = new RectangleF(R(104), R(14), R(200), R(70));
+                sRecR = new RectangleF(R(104), R(92), R(200), R(54));
+                btn = Math.Min(R(130), (sField.X - R(64)) / 3);
+                cx = sField.X / 2;
+                cy = Math.Max(R(180) + btn * 3 / 2, H - R(48) - btn * 3 / 2);
             }
             else
             {
-                int btn = R(150), outer = Math.Min(W - R(40), H - R(110) - 2 * btn - gap - R(80));
+                // campo em cima; cruz de controle embaixo, no centro
+                btn = R(118);
+                int outer = Math.Min(W - R(40), H - R(110) - 3 * btn - R(90));
                 sField = new Rectangle((W - outer) / 2, R(110), outer, outer);
                 sPause = new Rectangle(W - R(24) - R(64), R(24), R(64), R(64));
                 sScoreR = new RectangleF(R(104), R(14), R(200), R(70));
                 sRecR = new RectangleF(R(330), R(22), R(220), R(54));
-                int ly = H - R(40) - 2 * btn - gap;
-                sArrows[0] = new Rectangle(R(32), ly, btn, btn);
-                sArrows[1] = new Rectangle(R(32), ly + btn + gap, btn, btn);
-                sArrows[2] = new Rectangle(W - R(32) - 2 * btn - gap, H - R(40) - btn, btn, btn);
-                sArrows[3] = new Rectangle(W - R(32) - btn, H - R(40) - btn, btn, btn);
+                cx = W / 2;
+                cy = sField.Bottom + (H - sField.Bottom) / 2;
             }
+            sPadCenter = new Point(cx, cy);
+            sPadRadius = btn * 3 / 2 + gap + R(20);
+            sArrows[0] = new Rectangle(cx - btn / 2, cy - btn / 2 - gap - btn, btn, btn);
+            sArrows[1] = new Rectangle(cx - btn / 2, cy + btn / 2 + gap, btn, btn);
+            sArrows[2] = new Rectangle(cx - btn / 2 - gap - btn, cy - btn / 2, btn, btn);
+            sArrows[3] = new Rectangle(cx + btn / 2 + gap, cy - btn / 2, btn, btn);
             sLcd = Rectangle.Inflate(sField, -R(14), -R(14));
 
             sPanel = Center(new Rectangle(Point.Empty, view), Math.Min(W - R(40), R(520)), R(sstate == SState.Fim ? 400 : 300));
@@ -308,7 +314,11 @@ namespace Pintinho
                 g.FillRectangle(b, sPause.X + sPause.Width / 2 + R(4), sPause.Y + R(19), R(8), R(26));
             }
 
-            // setas
+            // cruz de controle
+            int hub = sArrows[0].Width;
+            Rectangle mid = new Rectangle(sPadCenter.X - hub / 2, sPadCenter.Y - hub / 2, hub, hub);
+            RoundBox(g, Rectangle.Inflate(mid, R(4), R(4)), 18 * sc, theme.Panel, theme.Panel, 0);
+            using (SolidBrush b = new SolidBrush(theme.Borda)) g.FillEllipse(b, Rectangle.Inflate(mid, -hub / 3, -hub / 3));
             for (int i = 0; i < 4; i++)
             {
                 bool on = sPressed.ContainsValue(i);
@@ -365,11 +375,14 @@ namespace Pintinho
             DrawText(g, "Sair", buttonFont, theme.Ink, sBtnB, CenterFmt);
         }
 
+        // Qualquer ponto da cruz vale: a direção é o lado mais próximo, a partir do centro.
         int ArrowAt(Point p)
         {
-            for (int i = 0; i < 4; i++)
-                if (Rectangle.Inflate(sArrows[i], R(12), R(12)).Contains(p)) return i;
-            return -1;
+            int dx = p.X - sPadCenter.X, dy = p.Y - sPadCenter.Y;
+            if (dx * dx + dy * dy > sPadRadius * sPadRadius) return -1;
+            if (Math.Abs(dx) < R(14) && Math.Abs(dy) < R(14)) return -2; // bem no meio: não muda
+            if (Math.Abs(dx) > Math.Abs(dy)) return dx < 0 ? 2 : 3;
+            return dy < 0 ? 0 : 1;
         }
 
         void SnakeDown(Contact c, Point p)
@@ -390,11 +403,14 @@ namespace Pintinho
             if (sPause.Contains(p)) { PauseSnake(); return; }
 
             int a = ArrowAt(p);
-            if (a < 0) return;
-            // vira ao encostar; deslizar o dedão para outra seta também vira
+            if (a == -1) return;
+            // vira ao encostar; rolar o dedão pela cruz também vira
             sPressed[c.Id] = a;
-            SnakeTurn(a);
-            Invalidate(Rectangle.Inflate(sArrows[a], R(8), R(8)));
+            if (a >= 0)
+            {
+                SnakeTurn(a);
+                Invalidate(Rectangle.Inflate(sArrows[a], R(8), R(8)));
+            }
             c.Role = Role.Arrastar;
             int id = c.Id;
             c.Drag = delegate(Point q)
@@ -406,7 +422,7 @@ namespace Pintinho
                 {
                     sPressed[id] = now;
                     SnakeTurn(now);
-                    Invalidate(Rectangle.Inflate(sArrows[before], R(8), R(8)));
+                    if (before >= 0) Invalidate(Rectangle.Inflate(sArrows[before], R(8), R(8)));
                     Invalidate(Rectangle.Inflate(sArrows[now], R(8), R(8)));
                 }
             };
@@ -417,7 +433,7 @@ namespace Pintinho
             int a;
             if (!sPressed.TryGetValue(id, out a)) return;
             sPressed.Remove(id);
-            Invalidate(Rectangle.Inflate(sArrows[a], R(8), R(8)));
+            if (a >= 0) Invalidate(Rectangle.Inflate(sArrows[a], R(8), R(8)));
         }
 
         bool SnakeKey(Keys key)
