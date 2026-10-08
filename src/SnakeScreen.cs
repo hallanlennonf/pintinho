@@ -144,9 +144,9 @@ namespace Pintinho
                 sPause = new Rectangle(sField.X - R(24) - R(64), R(24), R(64), R(64));
                 sScoreR = new RectangleF(R(104), R(14), R(200), R(70));
                 sRecR = new RectangleF(R(104), R(92), R(200), R(54));
-                // 20% menor, mais para a direita e encostada embaixo (perto do dedão)
+                // encostada no canto inferior esquerdo (alcance do dedão esquerdo)
                 btn = Math.Min(R(104), (sField.X - R(64)) / 3);
-                cx = Math.Min(sField.X / 2 + R(50), sField.X - R(14) - btn * 3 / 2 - gap);
+                cx = R(24) + btn * 3 / 2 + gap;
                 cy = H - R(24) - btn * 3 / 2 - gap;
             }
             else
@@ -158,7 +158,7 @@ namespace Pintinho
                 sPause = new Rectangle(W - R(24) - R(64), R(24), R(64), R(64));
                 sScoreR = new RectangleF(R(104), R(14), R(200), R(70));
                 sRecR = new RectangleF(R(330), R(22), R(220), R(54));
-                cx = W / 2 + R(60);
+                cx = R(24) + btn * 3 / 2 + gap;
                 cy = H - R(24) - btn * 3 / 2 - gap;
             }
             sPadCenter = new Point(cx, cy);

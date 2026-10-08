@@ -10,7 +10,7 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
   desenhos e nome próprios. "Aconchego" é nome provisório.
 - **Joguinhos** — tela de escolha (`Screen.Jogos`) com 2 jogos. **Cobrinha**: snake clássica (grade
   24x24, atravessa as bordas, morre ao morder o rabo), estilo LCD verde, paisagem e retrato.
-  Controle = **cruz única** (paisagem: à esquerda, dedão esquerdo; retrato: embaixo no centro); qualquer
+  Controle = **cruz única** no **canto inferior esquerdo** (24 px das bordas), nas duas orientações; qualquer
   ponto da cruz vale, a direção é o lado mais próximo do centro (dá para "rolar" o dedão). A versão
   com setas divididas entre as duas mãos (v0.5.0) ficou estranha para o usuário.
   **Comboio** (adultos), shooter de hordas: frota de
