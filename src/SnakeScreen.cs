@@ -9,8 +9,7 @@ namespace Pintinho
 {
     enum SState { Pronto, Jogando, Pausado, Fim }
 
-    // Escolha de joguinho (Comboio / Cobrinha) e a tela da Cobrinha.
-    // Botões pensados para segurar o tablet com as duas mãos: dedão esquerdo ↑ ↓, dedão direito ← →.
+    // Escolha de joguinho (Comboio / Cobrinha / Salada de Frutas) e a tela da Cobrinha.
     partial class MainForm
     {
         static readonly Color LcdBg = Shapes.Hex(0x9bbc0f), LcdMid = Shapes.Hex(0x306230), LcdDark = Shapes.Hex(0x0f380f);
@@ -18,22 +17,25 @@ namespace Pintinho
         // ---------- escolha de jogo ----------
 
         Rectangle hubBack;
-        readonly Rectangle[] hubCards = new Rectangle[2];
+        readonly Rectangle[] hubCards = new Rectangle[3];
 
         void LayoutHub()
         {
             int W = view.Width;
             hubBack = new Rectangle(R(40), R(36), R(130), R(52));
             int y0 = R(214);
+            int n = hubCards.Length;
             if (!portrait)
             {
-                int w = R(440), h = R(470), gap = R(36), x0 = (W - 2 * w - gap) / 2;
-                for (int i = 0; i < 2; i++) hubCards[i] = new Rectangle(x0 + i * (w + gap), y0, w, h);
+                // uma fileira só
+                int gap = R(28), w = Math.Min(R(440), (W - 2 * R(48) - (n - 1) * gap) / n), h = R(470), x0 = (W - n * w - (n - 1) * gap) / 2;
+                for (int i = 0; i < n; i++) hubCards[i] = new Rectangle(x0 + i * (w + gap), y0, w, h);
             }
             else
             {
-                int w = W - 2 * R(48), h = R(440), gap = R(32);
-                for (int i = 0; i < 2; i++) hubCards[i] = new Rectangle(R(48), y0 + i * (h + gap), w, h);
+                // grade de 2 colunas
+                int gap = R(28), w = (W - 2 * R(48) - gap) / 2, h = R(440);
+                for (int i = 0; i < n; i++) hubCards[i] = new Rectangle(R(48) + (i % 2) * (w + gap), y0 + (i / 2) * (h + gap), w, h);
             }
         }
 
@@ -54,28 +56,31 @@ namespace Pintinho
 
             string rec0 = Config.GameRecordWave > 0 ? "Recorde: onda " + Config.GameRecordWave : "Novo";
             string rec1 = Config.SnakeRecord > 0 ? "Recorde: " + Config.SnakeRecord : "Novo";
-            DrawHubCard(g, hubCards[0], theme.Taxi, "Comboio", rec0, "Segure a horda de gosmas com sua frota de bombeiros.", false);
-            DrawHubCard(g, hubCards[1], LcdBg, "Cobrinha", rec1, "A clássica: coma, cresça e não morda o próprio rabo.", true);
+            string rec2 = Config.FruitRecord > 0 ? "Recorde: " + Config.FruitRecord : "Novo";
+            DrawHubCard(g, hubCards[0], theme.Taxi, "Comboio", rec0, "Segure a horda de gosmas com sua frota de bombeiros.", 0);
+            DrawHubCard(g, hubCards[1], LcdBg, "Cobrinha", rec1, "A clássica: coma, cresça e não morda o próprio rabo.", 1);
+            DrawHubCard(g, hubCards[2], FRed, "Salada de Frutas", rec2, "Passe o dedo e corte as frutas. Tem modo para os pequenos!", 2);
             DrawLockButton(g, homeLock, 18 * sc);
         }
 
-        void DrawHubCard(Graphics g, Rectangle r, Color border, string title, string chip, string desc, bool snake)
+        // art: 0 = Comboio, 1 = Cobrinha, 2 = Salada de Frutas
+        void DrawHubCard(Graphics g, Rectangle r, Color border, string title, string chip, string desc, int art)
         {
             RoundBox(g, r, 28 * sc, GRoad, border, 3 * sc);
             int pad = R(24);
-            Rectangle img = portrait
-                ? new Rectangle(r.X + pad, r.Y + pad, r.Width - 2 * pad, R(250))
-                : new Rectangle(r.X + pad, r.Y + pad, r.Width - 2 * pad, R(230));
-            RoundBox(g, img, 18 * sc, snake ? LcdBg : Shapes.Hex(0x1c1f24), Color.Empty, 0);
-            if (snake) DrawSnakeArt(g, img);
+            Rectangle img = new Rectangle(r.X + pad, r.Y + pad, r.Width - 2 * pad, R(portrait ? 230 : 220));
+            RoundBox(g, img, 18 * sc, art == 1 ? LcdBg : Shapes.Hex(0x1c1f24), Color.Empty, 0);
+            if (art == 1) DrawSnakeArt(g, img);
+            else if (art == 2) DrawFruitArt(g, img);
             else DrawComboioArt(g, img);
-            RectangleF titleR = new RectangleF(r.X + pad, img.Bottom + R(16), r.Width - 2 * pad, R(40));
-            DrawText(g, title, cardTitleFont, theme.Ink, titleR, LeftFmt);
+            // recorde num selo no canto da imagem
             Size cs = TextRenderer.MeasureText(chip, labelFont);
-            Rectangle chipR = new Rectangle((int)titleR.Right - cs.Width - R(24), (int)(titleR.Y + (titleR.Height - R(28)) / 2), cs.Width + R(24), R(28));
-            RoundBox(g, chipR, chipR.Height / 2f, snake ? LcdBg : Shapes.Hex(0x1c1f24), Color.Empty, 0);
-            DrawText(g, chip, labelFont, snake ? LcdDark : theme.Ink, chipR, CenterFmt);
-            DrawText(g, desc, bodyFont, theme.Muted, new RectangleF(r.X + pad, titleR.Bottom + R(14), r.Width - 2 * pad, R(60)), WrapFmt);
+            Rectangle chipR = new Rectangle(img.Right - cs.Width - R(24) - R(10), img.Y + R(10), cs.Width + R(24), R(30));
+            RoundBox(g, chipR, chipR.Height / 2f, Shapes.Hex(0x1c1f24), border, 2 * sc);
+            DrawText(g, chip, labelFont, Color.White, chipR, CenterFmt);
+            RectangleF titleR = new RectangleF(r.X + pad, img.Bottom + R(16), r.Width - 2 * pad, R(44));
+            DrawText(g, title, cardTitleFont, theme.Ink, titleR, LeftFmt);
+            DrawText(g, desc, bodyFont, theme.Muted, new RectangleF(r.X + pad, titleR.Bottom + R(10), r.Width - 2 * pad, r.Bottom - titleR.Bottom - R(10) - pad), WrapFmt);
         }
 
         // Mini cena do Comboio (cartões da tela inicial e da escolha de jogo).
@@ -110,6 +115,7 @@ namespace Pintinho
             if (hubBack.Contains(p)) GoTo(Screen.Inicio);
             else if (hubCards[0].Contains(p)) GoTo(Screen.Jogo);
             else if (hubCards[1].Contains(p)) GoTo(Screen.Cobra);
+            else if (hubCards[2].Contains(p)) GoTo(Screen.Frutas);
         }
 
         // ---------- cobrinha ----------

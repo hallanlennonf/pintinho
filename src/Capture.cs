@@ -108,6 +108,19 @@ namespace Pintinho
                 DoLayout(Port); Shot("cobra-retrato");
                 sPressed.Clear();
                 snakeRecord = true; sstate = SState.Fim; DoLayout(Land); Shot("cobra-fim");
+
+                // salada de frutas
+                Config.FruitRecord = 87;
+                screen = Screen.Frutas; UpdateTheme(); EnterFruits(); DoLayout(Land);
+                Shot("frutas-menu");
+                DoLayout(Port); Shot("frutas-menu-retrato");
+                DoLayout(Land);
+                CaptureFruits(false, "frutas-desafio");
+                fstate = FState.Pausado; LayoutFruits(); Shot("frutas-pausa");
+                fruits.Over = true; fruits.OverText = "Cortou o ouriço!"; fRecord = true;
+                fstate = FState.Fim; LayoutFruits(); Shot("frutas-fim");
+                DoLayout(Port); CaptureFruits(true, "frutas-pequenos-retrato");
+                DoLayout(Land); CaptureFruits(true, "frutas-pequenos");
                 screen = Screen.Aconchego; UpdateTheme();
 
                 // área dos pais
@@ -126,6 +139,40 @@ namespace Pintinho
             }
             allowClose = true;
             Close();
+        }
+
+        // Joga uns segundos sozinho e corta uma fruta no meio do caminho.
+        void CaptureFruits(bool kids, string name)
+        {
+            fKids = kids;
+            fruits = new Fruits(kids, view.Width / sc, view.Height / sc, 3);
+            fstate = FState.Jogando;
+            LayoutFruits();
+            blades.Clear();
+            oldBlades.Clear();
+            fruits.Time = kids ? 0 : 50; // mais frutas no ar
+            for (int i = 0; i < 60 * 4; i++)
+            {
+                fruits.Step(1 / 60f);
+                if (fruits.Lives < 3) fruits.Lives = 3;
+            }
+            fruits.Over = false;
+            foreach (FruitPiece p in fruits.Pieces)
+                if (!p.Dead && p.Half == 0 && p.Kind != Fruits.Ourico)
+                {
+                    fruits.Slice(new PointF(p.X - 120, p.Y + 60), new PointF(p.X + 120, p.Y - 60));
+                    break;
+                }
+            for (int i = 0; i < 9; i++) fruits.Step(1 / 60f);
+            Blade b = new Blade();
+            for (int i = 0; i <= 10; i++)
+            {
+                b.Pts.Add(new PointF(view.Width / sc * (0.2f + i * 0.05f), view.Height / sc * (0.75f - i * 0.03f - (float)Math.Sin(i / 3.0) * 0.04f)));
+                b.Times.Add(fruits.Time - (10 - i) * 0.012f);
+            }
+            blades[99] = b;
+            Shot(name);
+            blades.Clear();
         }
 
         void SaveDrawings(Drawings.Item[] items, int w, int h, string prefix)

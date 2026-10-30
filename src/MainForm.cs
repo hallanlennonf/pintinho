@@ -11,7 +11,7 @@ using Microsoft.Win32;
 
 namespace Pintinho
 {
-    enum Screen { Inicio, Infantil, Aconchego, Jogo, Jogos, Cobra }
+    enum Screen { Inicio, Infantil, Aconchego, Jogo, Jogos, Cobra, Frutas }
     enum Overlay { Nenhum, Galeria, Pais, MaisCores, Carimbos, Misturador }
     enum Tool { Pincel, Spray, ArcoIris, Balde, Carimbo, Borracha, Lapis, Marcador, ContaGotas }
     enum Role { Nenhum, Pintar, Pinca, Arrastar, Cadeado }
@@ -131,6 +131,7 @@ namespace Pintinho
         void UpdateTheme()
         {
             if (screen == Screen.Jogo || screen == Screen.Jogos || screen == Screen.Cobra) theme = Theme.Escuro; // joguinhos: sempre noturno
+            else if (screen == Screen.Frutas) theme = Theme.Claro; // toalha de piquenique
             else if (screen == Screen.Aconchego) theme = Config.DarkTheme ? Theme.AconchegoEscuro : Theme.AconchegoClaro;
             else theme = Config.DarkTheme ? Theme.Escuro : Theme.Claro;
             BackColor = theme.Surface;
@@ -141,6 +142,7 @@ namespace Pintinho
             foreach (Contact c in contacts.Values) c.Role = Role.Nenhum;
             StopLoop();
             StopSnakeClock();
+            StopFruitLoop();
             screen = s;
             overlay = Overlay.Nenhum;
             UpdateTheme();
@@ -148,6 +150,7 @@ namespace Pintinho
             else if (s == Screen.Aconchego) EnterCozy();
             else if (s == Screen.Jogo) EnterGame();
             else if (s == Screen.Cobra) { EnterSnake(); LayoutSnake(); }
+            else if (s == Screen.Frutas) EnterFruits();
             Invalidate();
         }
 
@@ -219,6 +222,7 @@ namespace Pintinho
             base.OnDeactivate(e);
             if (screen == Screen.Jogo) PauseGame();
             if (screen == Screen.Cobra) PauseSnake();
+            if (screen == Screen.Frutas) PauseFruits();
             if (kiosk && !allowClose)
                 BeginInvoke(new MethodInvoker(delegate { if (!allowClose) Activate(); }));
         }
@@ -238,6 +242,7 @@ namespace Pintinho
             timer.Stop();
             StopLoop();
             StopSnakeClock();
+            StopFruitLoop();
             Updater.Changed -= OnUpdaterChanged;
             if (kiosk) SystemEvents.DisplaySettingsChanged -= OnDisplayChanged;
             if (guard != null) guard.Dispose();
@@ -256,6 +261,7 @@ namespace Pintinho
         {
             if (GameKey(keyData)) return true;
             if (SnakeKey(keyData)) return true;
+            if (FruitKey(keyData)) return true;
             if (keyData == (Keys.Control | Keys.Z)) { DoUndo(); return true; }
             if (keyData == (Keys.Control | Keys.Y)) { DoRedo(); return true; }
             if (keyData == (Keys.Control | Keys.Shift | Keys.Q)) { ExitApp(); return true; }
@@ -312,6 +318,7 @@ namespace Pintinho
             LayoutGame();
             LayoutHub();
             LayoutSnake();
+            LayoutFruits();
             LayoutGallery();
             LayoutParent();
         }
@@ -361,6 +368,7 @@ namespace Pintinho
                 case Screen.Jogo: PaintGame(g, clip); break;
                 case Screen.Jogos: PaintHub(g); break;
                 case Screen.Cobra: PaintSnake(g, clip); break;
+                case Screen.Frutas: PaintFruits(g, clip); break;
             }
             g.SmoothingMode = SmoothingMode.AntiAlias;
             if (toast != null) DrawToast(g);
@@ -441,6 +449,7 @@ namespace Pintinho
                 case Screen.Jogo: return gstate == GState.Menu ? homeLock : Rectangle.Empty;
                 case Screen.Jogos: return homeLock;
                 case Screen.Cobra: return Rectangle.Empty;
+                case Screen.Frutas: return fstate == FState.Menu ? homeLock : Rectangle.Empty;
                 default: return homeLock;
             }
         }

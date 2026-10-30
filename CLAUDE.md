@@ -8,7 +8,7 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
 - **Aconchego** — para adultos (a esposa), no estilo "Bobbie Goods": desenhos fofos e detalhados,
   zoom de pinça, mais ferramentas, 16 desenhos. ⚠️ "Bobbie Goods" é marca registrada: usar só o *estilo*, com
   desenhos e nome próprios. "Aconchego" é nome provisório.
-- **Joguinhos** — tela de escolha (`Screen.Jogos`) com 2 jogos. **Cobrinha**: snake clássica (grade
+- **Joguinhos** — tela de escolha (`Screen.Jogos`) com 3 jogos. **Cobrinha**: snake clássica (grade
   24x24, atravessa as bordas, morre ao morder o rabo), estilo LCD verde, paisagem e retrato.
   Controle = **cruz única** no **canto inferior esquerdo** (24 px das bordas), nas duas orientações; qualquer
   ponto da cruz vale, a direção é o lado mais próximo do centro (dá para "rolar" o dedão). A versão
@@ -16,6 +16,11 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
   **Comboio** (adultos), shooter de hordas: frota de
   caminhões de bombeiro vs. gosmas, plaquinhas (+N/×2 caminhões, dano, cadência, jato, para-choque),
   chefão a cada 5 ondas, moedas → Oficina (melhorias permanentes), recorde.
+  **Salada de Frutas** (`Screen.Frutas`): passar o dedo corta as frutas (gênero "corta-fruta", com nome,
+  arte e regras próprias — não copiar Fruit Ninja). Toalha xadrez de piquenique; 6 frutas + carambola (+5)
+  + ouriço (perigo). Modo **Pequenos** (filho, ~2-3 anos): frutas grandes e lentas, sem ouriço, um toque
+  já corta, nunca perde, rastro arco-íris. Modo **Desafio**: 3 vidas (fruta que cai ou ouriço cortado),
+  combo com 3+ no mesmo traço, recorde. Vários dedos cortam juntos.
 Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
 
 ## Hardware alvo (restrição principal)
@@ -91,6 +96,8 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
     Usuário achou a v0.4.1 fácil demais (não perdia depois da onda 4).
   - `SnakeScreen.cs` — escolha de jogo (hub) + Cobrinha (timer de 15 ms acumulando o passo; `Snake.cs`
     tem a lógica).
+  - `FruitScreen.cs` — Salada de Frutas: menu, partida, pausa, fim; mesmo esquema de laço do Comboio
+    (buffer da tela inteira; frutas e metades pré-desenhadas em sprites, só giram). `Fruits.cs` = lógica.
   - `Capture.cs` — modo `--captura`.
 - `Game.cs` — lógica pura do Comboio (espaço 760 x H; ondas, inimigos, tiros, plaquinhas, partículas).
 - `Surface.cs` — tinta + contorno + máscara do balde; desfazer/refazer; `StrokePath` (traço
@@ -119,7 +126,8 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
   instalador e atualização automática.
 - Mais desenhos (Aconchego e veículos); pacote de desenhos baixável sem nova versão do app.
 - Comboio: testar fps e balanceamento no tablet; sons; mais tipos de gosma.
-- Mais joguinhos (labirinto, ligue os pontos, memória) — talvez uma tela de escolha de jogo.
+- Próximo: jogo educativo para 2 anos ("ligar as cores", várias fases que vão passando).
+- Mais joguinhos (labirinto, ligue os pontos, memória).
 - Sons; abrir desenhos salvos para continuar; Aconchego com folha retrato.
 - Bloquear gestos de borda do Windows 10 no modo tablet.
 
