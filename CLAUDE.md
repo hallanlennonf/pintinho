@@ -4,7 +4,8 @@ Memória do projeto. Atualize este arquivo sempre que uma decisão importante mu
 
 ## Objetivo
 App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escolhidos numa tela inicial:
-- **Infantil** — para o filho do usuário (ama veículos): botões grandes, 24 veículos.
+- **Infantil** — para o filho do usuário (ama veículos): botões grandes, 24 veículos + os desenhos do Aconchego
+  (mesma lista, centralizados na folha 10:7; galeria do Infantil = `Drawings.All` + `Drawings.Cozy`).
 - **Aconchego** — para adultos (a esposa), no estilo "Bobbie Goods": desenhos fofos e detalhados,
   zoom de pinça, mais ferramentas, 16 desenhos. ⚠️ "Bobbie Goods" é marca registrada: usar só o *estilo*, com
   desenhos e nome próprios. "Aconchego" é nome provisório.

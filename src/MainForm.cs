@@ -173,7 +173,10 @@ namespace Pintinho
             base.OnLoad(e);
             if (kiosk) Bounds = Screen_Bounds();
             startedAt = Environment.TickCount;
-            kidsGallery = new Gallery(Drawings.All, "desenhos");
+            // Infantil: veículos + os desenhos do Aconchego (quadrados, ficam centralizados na folha 10:7)
+            List<Drawings.Item> kidsItems = new List<Drawings.Item>(Drawings.All);
+            kidsItems.AddRange(Drawings.Cozy);
+            kidsGallery = new Gallery(kidsItems.ToArray(), "desenhos");
             cozyGallery = new Gallery(Drawings.Cozy, "desenhos-aconchego");
             kidsCurrent = kidsGallery.Items[0];
             cozyCurrent = cozyGallery.Items[0];

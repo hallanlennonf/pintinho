@@ -41,6 +41,12 @@ namespace Pintinho
                 DoLayout(Port);
                 Shot("infantil-retrato-escuro");
                 Config.DarkTheme = false; UpdateTheme();
+                DoLayout(Land);
+                LoadKidsItem(kidsGallery.Items[Drawings.All.Length + 2]);
+                Shot("infantil-desenho-aconchego");
+                kidsGallery.Page = 2; overlay = Overlay.Galeria; Shot("infantil-galeria-aconchego");
+                kidsGallery.Page = 0; overlay = Overlay.Nenhum;
+                LoadKidsItem(kidsGallery.Items[2]);
 
                 // aconchego
                 DoLayout(Land);
