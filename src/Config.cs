@@ -23,6 +23,16 @@ namespace Pintinho
         public static int GameCoins, GameRecordWave, GameRecordScore;
         public static readonly int[] GameUpg = new int[6];
         public static int SnakeRecord, FruitRecord;
+        // Joguinhos de fases: quantas fases cada um já completou (chave do jogo -> fase)
+        static readonly Dictionary<string, int> miniBest = new Dictionary<string, int>();
+
+        public static int MiniBest(string key)
+        {
+            int v;
+            return miniBest.TryGetValue(key, out v) ? v : 0;
+        }
+
+        public static void SetMiniBest(string key, int level) { miniBest[key] = level; }
         public static readonly List<Color> MyColors = new List<Color>();
 
         public static void Load()
@@ -49,6 +59,12 @@ namespace Pintinho
                     }
                     else if (key == "cobra") int.TryParse(val, out SnakeRecord);
                     else if (key == "frutas") int.TryParse(val, out FruitRecord);
+                    else if (key == "fases")
+                        foreach (string part in val.Split(';'))
+                        {
+                            int colon = part.IndexOf(':'), v;
+                            if (colon > 0 && int.TryParse(part.Substring(colon + 1), out v)) miniBest[part.Substring(0, colon)] = v;
+                        }
                     else if (key == "minhascores")
                     {
                         MyColors.Clear();
@@ -78,6 +94,15 @@ namespace Pintinho
                 sb.Append("\r\n");
                 sb.Append("cobra=").Append(SnakeRecord).Append("\r\n");
                 sb.Append("frutas=").Append(FruitRecord).Append("\r\n");
+                sb.Append("fases=");
+                bool first = true;
+                foreach (KeyValuePair<string, int> kv in miniBest)
+                {
+                    if (!first) sb.Append(';');
+                    sb.Append(kv.Key).Append(':').Append(kv.Value);
+                    first = false;
+                }
+                sb.Append("\r\n");
                 sb.Append("minhascores=");
                 for (int i = 0; i < MyColors.Count; i++)
                 {

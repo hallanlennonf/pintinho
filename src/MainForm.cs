@@ -11,7 +11,7 @@ using Microsoft.Win32;
 
 namespace Pintinho
 {
-    enum Screen { Inicio, Infantil, Aconchego, Jogo, Jogos, Cobra, Frutas }
+    enum Screen { Inicio, Infantil, Aconchego, Jogo, Jogos, Cobra, Frutas, Mini }
     enum Overlay { Nenhum, Galeria, Pais, MaisCores, Carimbos, Misturador }
     enum Tool { Pincel, Spray, ArcoIris, Balde, Carimbo, Borracha, Lapis, Marcador, ContaGotas }
     enum Role { Nenhum, Pintar, Pinca, Arrastar, Cadeado }
@@ -126,12 +126,13 @@ namespace Pintinho
             }
             timer.Interval = 40;
             timer.Tick += OnTick;
+            InitMinis();
         }
 
         void UpdateTheme()
         {
             if (screen == Screen.Jogo || screen == Screen.Jogos || screen == Screen.Cobra) theme = Theme.Escuro; // joguinhos: sempre noturno
-            else if (screen == Screen.Frutas) theme = Theme.Claro; // toalha de piquenique
+            else if (screen == Screen.Frutas || screen == Screen.Mini) theme = Theme.Claro; // toalha de piquenique / joguinhos de fases
             else if (screen == Screen.Aconchego) theme = Config.DarkTheme ? Theme.AconchegoEscuro : Theme.AconchegoClaro;
             else theme = Config.DarkTheme ? Theme.Escuro : Theme.Claro;
             BackColor = theme.Surface;
@@ -143,6 +144,7 @@ namespace Pintinho
             StopLoop();
             StopSnakeClock();
             StopFruitLoop();
+            StopMiniClock();
             screen = s;
             overlay = Overlay.Nenhum;
             UpdateTheme();
@@ -246,6 +248,7 @@ namespace Pintinho
             StopLoop();
             StopSnakeClock();
             StopFruitLoop();
+            StopMiniClock();
             Updater.Changed -= OnUpdaterChanged;
             if (kiosk) SystemEvents.DisplaySettingsChanged -= OnDisplayChanged;
             if (guard != null) guard.Dispose();
@@ -322,6 +325,7 @@ namespace Pintinho
             LayoutHub();
             LayoutSnake();
             LayoutFruits();
+            LayoutMini();
             LayoutGallery();
             LayoutParent();
         }
@@ -372,6 +376,7 @@ namespace Pintinho
                 case Screen.Jogos: PaintHub(g); break;
                 case Screen.Cobra: PaintSnake(g, clip); break;
                 case Screen.Frutas: PaintFruits(g, clip); break;
+                case Screen.Mini: PaintMini(g, clip); break;
             }
             g.SmoothingMode = SmoothingMode.AntiAlias;
             if (toast != null) DrawToast(g);
@@ -453,6 +458,7 @@ namespace Pintinho
                 case Screen.Jogos: return homeLock;
                 case Screen.Cobra: return Rectangle.Empty;
                 case Screen.Frutas: return fstate == FState.Menu ? homeLock : Rectangle.Empty;
+                case Screen.Mini: return mstate == MState.Fases ? homeLock : Rectangle.Empty;
                 default: return homeLock;
             }
         }

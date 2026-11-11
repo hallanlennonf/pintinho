@@ -9,7 +9,7 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
 - **Aconchego** — para adultos (a esposa), no estilo "Bobbie Goods": desenhos fofos e detalhados,
   zoom de pinça, mais ferramentas, 16 desenhos. ⚠️ "Bobbie Goods" é marca registrada: usar só o *estilo*, com
   desenhos e nome próprios. "Aconchego" é nome provisório.
-- **Joguinhos** — tela de escolha (`Screen.Jogos`) com 3 jogos. **Cobrinha**: snake clássica (grade
+- **Joguinhos** — tela de escolha (`Screen.Jogos`, grade 4x2 / 2x4) com 8 jogos. **Cobrinha**: snake clássica (grade
   24x24, atravessa as bordas, morre ao morder o rabo), estilo LCD verde, paisagem e retrato.
   Controle = **cruz única** no **canto inferior esquerdo** (24 px das bordas), nas duas orientações; qualquer
   ponto da cruz vale, a direção é o lado mais próximo do centro (dá para "rolar" o dedão). A versão
@@ -22,6 +22,14 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
   + ouriço (perigo). Modo **Pequenos** (filho, ~2-3 anos): frutas grandes e lentas, sem ouriço, um toque
   já corta, nunca perde, rastro arco-íris. Modo **Desafio**: 3 vidas (fruta que cai ou ouriço cortado),
   combo com 3+ no mesmo traço, recorde. Vários dedos cortam juntos.
+  **Joguinhos de fases** (`Screen.Mini`, 12 fases cada, ficam mais difíceis; fase seguinte destrava ao
+  vencer; progresso em `fases=` no config): **Toupeira** (bater nas toupeiras antes do tempo; mais
+  buracos/velocidade; coelhinho = não bater, -3s), **Quebra-cabeça** deslizante com desenho do app pintado
+  sozinho (2x2 → 5x5, botão de números, modelo ao lado), **Forca** amigável (balões estouram no lugar do
+  enforcado; palavras com dica de categoria, maiores a cada fase), **Ligue os pares** (atividade de escola:
+  frutas, formas, cor, sombra, número↔quantidade, maiúscula↔minúscula, continhas; arrastar ou tocar
+  um e outro; nunca perde), **7 Erros** (cenas geradas na hora; fase 1 = 3 erros, 2-3 = 5, depois 7;
+  diferenças mais sutis; botão Dica).
 Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
 
 ## Hardware alvo (restrição principal)
@@ -99,6 +107,10 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
     tem a lógica).
   - `FruitScreen.cs` — Salada de Frutas: menu, partida, pausa, fim; mesmo esquema de laço do Comboio
     (buffer da tela inteira; frutas e metades pré-desenhadas em sprites, só giram). `Fruits.cs` = lógica.
+  - `MiniHost.cs` — base dos joguinhos de fases (classe `Mini`: Start/Layout/Paint/Down/Up/Tick/DrawArt;
+    escolha de fase, cabeçalho, cartão de fim, relógio de 15 ms; cada jogo invalida só o que mexeu) +
+    ajudantes (formas, balão, flor, `AutoColor` = pinta sozinho as regiões de um desenho).
+    Jogos: `MoleGame.cs`, `SlideGame.cs`, `HangGame.cs`, `MatchGame.cs`, `DiffGame.cs`.
   - `Capture.cs` — modo `--captura`.
 - `Game.cs` — lógica pura do Comboio (espaço 760 x H; ondas, inimigos, tiros, plaquinhas, partículas).
 - `Surface.cs` — tinta + contorno + máscara do balde; desfazer/refazer; `StrokePath` (traço
@@ -127,8 +139,7 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
   instalador e atualização automática.
 - Mais desenhos (Aconchego e veículos); pacote de desenhos baixável sem nova versão do app.
 - Comboio: testar fps e balanceamento no tablet; sons; mais tipos de gosma.
-- Próximo: jogo educativo para 2 anos ("ligar as cores", várias fases que vão passando).
-- Mais joguinhos (labirinto, ligue os pontos, memória).
+- Mais joguinhos (labirinto, ligue os pontos, memória, arrastar cores para baldes).
 - Sons; abrir desenhos salvos para continuar; Aconchego com folha retrato.
 - Bloquear gestos de borda do Windows 10 no modo tablet.
 

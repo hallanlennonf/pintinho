@@ -116,6 +116,7 @@ namespace Pintinho
                 case Screen.Jogos: HubDown(p); break;
                 case Screen.Cobra: SnakeDown(c, p); break;
                 case Screen.Frutas: FruitDown(c, p); break;
+                case Screen.Mini: MiniDown(c, p); break;
             }
         }
 
@@ -150,6 +151,7 @@ namespace Pintinho
             contacts.Remove(id);
             if (screen == Screen.Cobra) SnakeUp(id);
             if (screen == Screen.Frutas) FruitUp(id);
+            if (screen == Screen.Mini) MiniUp(id);
             switch (c.Role)
             {
                 case Role.Pintar:

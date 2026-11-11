@@ -129,6 +129,31 @@ namespace Pintinho
                 DoLayout(Land); CaptureFruits(true, "frutas-pequenos");
                 screen = Screen.Aconchego; UpdateTheme();
 
+                // joguinhos de fases
+                Config.SetMiniBest("toupeira", 3); Config.SetMiniBest("forca", 12);
+                screen = Screen.Jogos; UpdateTheme(); DoLayout(Land); Shot("jogos-escolha-8");
+                DoLayout(Port); Shot("jogos-escolha-8-retrato");
+                string[] names = { "toupeira", "deslize", "forca", "ligue", "erros" };
+                int[][] lvls = { new int[] { 1, 9 }, new int[] { 1, 7 }, new int[] { 2, 11 }, new int[] { 3, 11 }, new int[] { 1, 10 } };
+                for (int i = 0; i < minis.Length; i++)
+                {
+                    mini = minis[i]; mstate = MState.Fases; screen = Screen.Mini; UpdateTheme(); DoLayout(Land);
+                    if (i == 0) Shot("mini-fases");
+                    foreach (int lv in lvls[i])
+                    {
+                        Random r = new Random(lv * 7 + i);
+                        mini.Level = lv; mini.Won = mini.Lost = false; mini.Start(r); mstate = MState.Jogando;
+                        DemoMini(mini, r);
+                        DoLayout(Land); Shot("mini-" + names[i] + "-" + lv);
+                        DoLayout(Port); Shot("mini-" + names[i] + "-" + lv + "-retrato");
+                    }
+                }
+                DoLayout(Land);
+                mini.Won = true; mstate = MState.Fim; LayoutMini(); Shot("mini-fim-ganhou");
+                mini.Won = false; mini.Lost = true; Shot("mini-fim-perdeu");
+                mini = minis[2]; mini.Lost = true; Shot("mini-fim-forca");
+                screen = Screen.Aconchego; UpdateTheme();
+
                 // área dos pais
                 DoLayout(Land);
                 overlay = Overlay.Pais;
@@ -179,6 +204,19 @@ namespace Pintinho
             blades[99] = b;
             Shot(name);
             blades.Clear();
+        }
+
+        // Avança um pouco cada joguinho para a captura não mostrar só a fase vazia.
+        void DemoMini(Mini m, Random r)
+        {
+            DoLayout(Land);
+            for (int i = 0; i < 90; i++) m.Tick(1 / 30f);
+            if (m is HangGame)
+            {
+                // chuta umas letras
+                foreach (char ch in "AEOSRT") m.Down(new Contact(), ((HangGame)m).KeyCenter(ch));
+            }
+            if (m is DiffGame) { m.Hint(); m.Tick(0.2f); }
         }
 
         void SaveDrawings(Drawings.Item[] items, int w, int h, string prefix)
