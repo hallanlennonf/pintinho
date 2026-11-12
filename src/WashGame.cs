@@ -18,7 +18,7 @@ namespace Pintinho
             public override Color Accent { get { return Shapes.Hex(0x039be5); } }
             public override string Info { get { return stage == 0 ? "Esfregue!" : stage == 1 ? "Enxágue!" : "Brilhando!"; } }
 
-            const float UW = 400, UH = 240, Brush = 22, Cell = 16;
+            const float UW = 400, UH = 240, Brush = 15, Cell = 16;
             static readonly string[] Names = { "Carro", "Caminhão", "Ônibus", "Bombeiro", "Trator", "Corrida" };
             static readonly int[] DefaultColor = { 0xe53935, 0x1e88e5, 0xfdd835, 0xe53935, 0x43a047, 0x8e24aa };
 
