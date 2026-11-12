@@ -150,8 +150,14 @@ namespace Pintinho
                 }
                 mini = minis[0]; mini.Level = 2; mini.Won = mini.Lost = false; mini.Start(new Random(4)); DoLayout(Land);
                 ((WashGame)mini).DemoStage(1); Shot("mini-lavajato-enxaguar");
-                ((WashGame)mini).DemoStage(2); Shot("mini-lavajato-pintar");
-                DoLayout(Port); Shot("mini-lavajato-pintar-retrato");
+                DoLayout(Port); Shot("mini-lavajato-enxaguar-retrato"); DoLayout(Land);
+                for (int lv = 1; lv <= 12; lv++)
+                {
+                    mini.Level = lv; mini.Won = false; mini.Start(new Random(lv)); DoLayout(Land);
+                    int st = ((WashGame)mini).DemoWash();
+                    File.AppendAllText(Path.Combine(CaptureDir, "lavajato.txt"), "fase " + lv + " -> etapa " + st + " won=" + mini.Won + Environment.NewLine);
+                    if (lv == 7) Shot("mini-lavajato-saindo");
+                }
                 mini = minis[5];
                 DoLayout(Land);
                 mini.Won = true; mstate = MState.Fim; LayoutMini(); Shot("mini-fim-ganhou");
