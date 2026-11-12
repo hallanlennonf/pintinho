@@ -17,7 +17,7 @@ namespace Pintinho
         // ---------- escolha de jogo ----------
 
         Rectangle hubBack;
-        readonly Rectangle[] hubCards = new Rectangle[8];
+        readonly Rectangle[] hubCards = new Rectangle[9];
         Font hubTitleFont;
 
         void LayoutHub()
@@ -25,10 +25,10 @@ namespace Pintinho
             int W = view.Width;
             hubBack = new Rectangle(R(40), R(36), R(130), R(52));
             if (hubTitleFont != null) hubTitleFont.Dispose();
-            hubTitleFont = F(24, FontStyle.Bold);
+            hubTitleFont = F(22, FontStyle.Bold);
             int H = view.Height, y0 = R(186), n = hubCards.Length, gap = R(20);
-            // grade: 4x2 deitado, 2x4 em pé; deixa o canto de baixo livre para o cadeado
-            int cols = portrait ? 2 : 4, rows = (n + cols - 1) / cols;
+            // grade: 5 colunas deitado, 3 em pé; deixa o canto de baixo livre para o cadeado
+            int cols = portrait ? 3 : 5, rows = (n + cols - 1) / cols;
             int w = (W - 2 * R(48) - (cols - 1) * gap) / cols, h = (H - y0 - R(100) - (rows - 1) * gap) / rows;
             for (int i = 0; i < n; i++) hubCards[i] = new Rectangle(R(48) + (i % cols) * (w + gap), y0 + (i / cols) * (h + gap), w, h);
         }

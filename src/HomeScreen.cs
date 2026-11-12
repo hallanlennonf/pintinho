@@ -52,7 +52,7 @@ namespace Pintinho
             DrawHomeCard(g, homeCards[1], CozyCardBg, CozyCardBorder, CozyCardInk, Color.White, CozyCardInk, false,
                 "Aconchego", "Adultos", "Desenhos fofos e cheios de detalhes para relaxar, com zoom de pinça.", cozyGallery.Items[1], true);
             DrawHomeCard(g, homeCards[2], GRoad, Shapes.Hex(0xffc727), Shapes.Hex(0xf5ecdc), Shapes.Hex(0xffc727), Shapes.Hex(0x2b2118), false,
-                "Joguinhos", "Novo", "8 jogos: Toupeira, Forca, 7 Erros, Ligue os pares e mais.", null, false);
+                "Joguinhos", "Novo", "9 jogos: Lava-jato, Toupeira, Forca, 7 Erros e mais.", null, false);
 
             DrawText(g, "v" + AppInfo.Version + " alpha", smallFont, theme.Muted, new RectangleF(R(32), view.Height - R(52), R(300), R(28)), LeftFmt);
             DrawLockButton(g, homeLock, 18 * sc);

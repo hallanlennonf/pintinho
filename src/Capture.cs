@@ -133,8 +133,8 @@ namespace Pintinho
                 Config.SetMiniBest("toupeira", 3); Config.SetMiniBest("forca", 12);
                 screen = Screen.Jogos; UpdateTheme(); DoLayout(Land); Shot("jogos-escolha-8");
                 DoLayout(Port); Shot("jogos-escolha-8-retrato");
-                string[] names = { "toupeira", "deslize", "forca", "ligue", "erros" };
-                int[][] lvls = { new int[] { 1, 9 }, new int[] { 1, 7 }, new int[] { 2, 11 }, new int[] { 3, 11 }, new int[] { 1, 10 } };
+                string[] names = { "lavajato", "toupeira", "deslize", "forca", "ligue", "erros" };
+                int[][] lvls = { new int[] { 1, 10 }, new int[] { 1, 9 }, new int[] { 1, 7 }, new int[] { 2, 11 }, new int[] { 3, 11 }, new int[] { 1, 10 } };
                 for (int i = 0; i < minis.Length; i++)
                 {
                     mini = minis[i]; mstate = MState.Fases; screen = Screen.Mini; UpdateTheme(); DoLayout(Land);
@@ -148,10 +148,15 @@ namespace Pintinho
                         DoLayout(Port); Shot("mini-" + names[i] + "-" + lv + "-retrato");
                     }
                 }
+                mini = minis[0]; mini.Level = 2; mini.Won = mini.Lost = false; mini.Start(new Random(4)); DoLayout(Land);
+                ((WashGame)mini).DemoStage(1); Shot("mini-lavajato-enxaguar");
+                ((WashGame)mini).DemoStage(2); Shot("mini-lavajato-pintar");
+                DoLayout(Port); Shot("mini-lavajato-pintar-retrato");
+                mini = minis[5];
                 DoLayout(Land);
                 mini.Won = true; mstate = MState.Fim; LayoutMini(); Shot("mini-fim-ganhou");
                 mini.Won = false; mini.Lost = true; Shot("mini-fim-perdeu");
-                mini = minis[2]; mini.Lost = true; Shot("mini-fim-forca");
+                mini = minis[3]; mini.Lost = true; Shot("mini-fim-forca");
                 screen = Screen.Aconchego; UpdateTheme();
 
                 // área dos pais
@@ -217,6 +222,14 @@ namespace Pintinho
                 foreach (char ch in "AEOSRT") m.Down(new Contact(), ((HangGame)m).KeyCenter(ch));
             }
             if (m is DiffGame) { m.Hint(); m.Tick(0.2f); }
+            if (m is WashGame)
+            {
+                // esfrega um pedaço do veículo
+                Contact c = new Contact();
+                Rectangle a = m.Area;
+                m.Down(c, new Point(a.X + a.Width / 4, a.Y + a.Height / 3));
+                for (int i = 0; i <= 20; i++) c.Drag(new Point(a.X + a.Width / 4 + i * a.Width / 50, a.Y + a.Height / 3 + (i % 2) * a.Height / 6));
+            }
         }
 
         void SaveDrawings(Drawings.Item[] items, int w, int h, string prefix)

@@ -57,7 +57,7 @@ namespace Pintinho
 
         void InitMinis()
         {
-            minis = new Mini[] { new MoleGame(), new SlideGame(), new HangGame(), new MatchGame(), new DiffGame() };
+            minis = new Mini[] { new WashGame(), new MoleGame(), new SlideGame(), new HangGame(), new MatchGame(), new DiffGame() };
             foreach (Mini m in minis) m.M = this;
             miniTimer.Interval = 15;
             miniTimer.Tick += OnMiniTick;
