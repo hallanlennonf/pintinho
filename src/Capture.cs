@@ -151,12 +151,18 @@ namespace Pintinho
                 mini = minis[0]; mini.Level = 2; mini.Won = mini.Lost = false; mini.Start(new Random(4)); DoLayout(Land);
                 ((WashGame)mini).DemoStage(1); Shot("mini-lavajato-enxaguar");
                 DoLayout(Port); Shot("mini-lavajato-enxaguar-retrato"); DoLayout(Land);
-                // caminho de verdade: fase -> cartão de fim -> "próxima", 13 vezes seguidas sem sair
+                ((WashGame)mini).DemoStage(2); Shot("mini-lavajato-pintar");
+                DoLayout(Port); Shot("mini-lavajato-pintar-retrato"); DoLayout(Land);
+                Config.SetMiniBest("lavajato", 17); mstate = MState.Fases; LayoutMini(); Shot("mini-lavajato-fases");
+                DoLayout(Port); Shot("mini-lavajato-fases-retrato"); DoLayout(Land);
+                Config.SetMiniBest("lavajato", 0);
+                // caminho de verdade: fase -> cartão de fim -> "próxima", todas as fases e volta para a 1 seguidas sem sair
                 DoLayout(Land);
                 mini.Level = 1; mini.Won = false; mini.Start(new Random(1)); mstate = MState.Jogando; LayoutMini();
-                for (int n = 1; n <= 13; n++)
+                for (int n = 1; n <= 41; n++)
                 {
                     int lv = mini.Level;
+                    if (lv == 40) Shot("mini-lavajato-40");
                     int st = ((WashGame)mini).DemoWash();
                     for (int t = 0; t < 120 && !mini.Won; t++) mini.Tick(1 / 30f);
                     File.AppendAllText(Path.Combine(CaptureDir, "lavajato.txt"), "fase " + lv + " -> etapa " + st + " won=" + mini.Won + Environment.NewLine);

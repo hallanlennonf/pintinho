@@ -9,34 +9,44 @@ namespace Pintinho
     partial class MainForm
     {
         // Lava-jato (2 a 4 anos): o veículo chega sujo de lama. 1) esfregar com a esponja (a lama vira
-        // espuma), 2) enxaguar com a mangueira, e ele sai brilhando para a próxima fase. Sem texto para ler, sem tempo e sem perder: cada etapa termina sozinha quando
-        // quase tudo foi limpo. Fases trocam o veículo (6) e da 7 em diante vem mais sujo.
+        // espuma), 2) enxaguar com a mangueira, 3) tocar numa cor para pintar e no ✓ para ele sair
+        // brilhando. Sem texto para ler, sem tempo e sem perder: cada etapa termina sozinha quando
+        // quase tudo foi limpo. 40 fases: trocam o veículo (6) e, aos poucos, vem mais lama, a esponja
+        // diminui e é preciso limpar um pouco mais para passar.
         class WashGame : Mini
         {
             public override string Key { get { return "lavajato"; } }
             public override string Title { get { return "Lava-jato"; } }
             public override Color Accent { get { return Shapes.Hex(0x039be5); } }
-            public override string Info { get { return stage == 0 ? "Esfregue!" : stage == 1 ? "Enxágue!" : "Brilhando!"; } }
+            public override int Levels { get { return MaxLevels; } }
+            public override string Info { get { return stage == 0 ? "Esfregue!" : stage == 1 ? "Enxágue!" : stage == 2 ? "Pinte!" : "Brilhando!"; } }
 
-            const float UW = 400, UH = 240, Brush = 15, Cell = 16;
+            const float UW = 400, UH = 240, Cell = 16;
+            const int MaxLevels = 40;
             static readonly string[] Names = { "Carro", "Caminhão", "Ônibus", "Bombeiro", "Trator", "Corrida" };
             static readonly int[] DefaultColor = { 0xe53935, 0x1e88e5, 0xfdd835, 0xe53935, 0x43a047, 0x8e24aa };
+            static readonly Color[] PaintColors = {
+                Shapes.Hex(0xe53935), Shapes.Hex(0xfb8c00), Shapes.Hex(0xfdd835), Shapes.Hex(0x43a047),
+                Shapes.Hex(0x1e88e5), Shapes.Hex(0x8e24aa), Shapes.Hex(0xec407a), Shapes.Hex(0x212121)
+            };
 
             class Part { public GraphicsPath Path; public bool Body; public Color C; }
             class Fx { public float X, Y, VX, VY, Life, Size; public int Kind; public Color C; } // 0 gota, 1 bolha, 2 brilho
 
-            int kind, stage; // 0 esfregar, 1 enxaguar, 3 indo embora
-            bool heavy;
+            int kind, stage; // 0 esfregar, 1 enxaguar, 2 pintar, 3 indo embora
+            bool painted;
+            float brush, need; // raio da esponja (espaço 400x240) e fração a limpar
             Color body;
-            float stageWait, driveT;
+            float stageWait, driveT, finishT;
             Random rnd;
             List<Part> parts;
             GraphicsPath silhouette;
             bool[] inside, dirty, foamy, scrubbed, rinsed;
             int cols, rows, dirtyCount, foamCount;
             Bitmap bg, vehBmp, mud, foam;
-            Rectangle vRect, bar;
-            readonly Rectangle[] stepIcons = new Rectangle[2];
+            Rectangle vRect, bar, checkBtn;
+            readonly Rectangle[] colorBtns = new Rectangle[8];
+            readonly Rectangle[] stepIcons = new Rectangle[3];
             readonly Dictionary<int, PointF> fingers = new Dictionary<int, PointF>();
             readonly List<Fx> fx = new List<Fx>();
 
@@ -171,7 +181,9 @@ namespace Pintinho
             {
                 rnd = r;
                 kind = (Level - 1) % 6;
-                heavy = Level > 6;
+                float t = (Level - 1) / (float)(MaxLevels - 1); // 0..1
+                brush = 16 - 5 * t;
+                need = 0.86f + 0.08f * t;
                 body = Shapes.Hex(DefaultColor[kind]);
                 parts = Build(kind);
                 silhouette = new GraphicsPath(FillMode.Winding);
@@ -186,7 +198,8 @@ namespace Pintinho
                 rinsed = new bool[inside.Length];
                 stage = 0;
                 foamCount = 0;
-                stageWait = driveT = 0;
+                painted = false;
+                stageWait = driveT = finishT = 0;
                 fx.Clear();
                 fingers.Clear();
                 foreach (Bitmap b in new Bitmap[] { mud, foam, vehBmp }) if (b != null) b.Dispose();
@@ -209,11 +222,12 @@ namespace Pintinho
                         g.SetClip(clip);
                     }
                     Color[] mc = { Shapes.Hex(0x6d4c41), Shapes.Hex(0x795548), Shapes.Hex(0x5d4037), Shapes.Hex(0x8d6e63) };
-                    int blobs = heavy ? 70 : 32;
+                    float t = (Level - 1) / (float)(MaxLevels - 1);
+                    int blobs = 26 + (int)(t * 60);
                     for (int i = 0; i < blobs; i++)
                     {
                         float x = (float)rnd.NextDouble() * UW, y = 40 + (float)rnd.NextDouble() * 190;
-                        float rr = (heavy ? 26 : 20) + (float)rnd.NextDouble() * 26;
+                        float rr = 20 + t * 8 + (float)rnd.NextDouble() * 26;
                         using (SolidBrush b = new SolidBrush(Color.FromArgb(240, mc[rnd.Next(mc.Length)])))
                         {
                             g.FillEllipse(b, (x - rr) * k, (y - rr * 0.8f) * k, 2 * rr * k, 1.6f * rr * k);
@@ -241,7 +255,7 @@ namespace Pintinho
             public override void Layout()
             {
                 if (parts == null) return;
-                int barH = R(130);
+                int barH = M.portrait ? R(240) : R(130);
                 bar = new Rectangle(Area.X, Area.Bottom - barH, Area.Width, barH);
                 Rectangle top = new Rectangle(Area.X, Area.Y, Area.Width, Area.Height - barH - R(16));
                 float k = Math.Min((top.Width - R(40)) / UW, (top.Height - R(20)) / UH);
@@ -257,9 +271,17 @@ namespace Pintinho
                 }
                 RenderVehicle();
 
-                // barra: as 2 etapas (esponja -> mangueira)
+                // barra: etapas (1-2) ou cores + ✓ (3)
                 int s = Math.Min(R(104), barH - R(20));
-                for (int i = 0; i < 2; i++) stepIcons[i] = new Rectangle(bar.X + bar.Width / 2 - (2 * s + R(40)) / 2 + i * (s + R(40)), bar.Y + (barH - s) / 2, s, s);
+                for (int i = 0; i < 3; i++) stepIcons[i] = new Rectangle(bar.X + bar.Width / 2 - (3 * s + 2 * R(40)) / 2 + i * (s + R(40)), bar.Y + (barH - s) / 2, s, s);
+                // cores grandes (dedo de criança): 1 fileira deitado, 2 fileiras em pé
+                int perRow = M.portrait ? 4 : 8, nRows = 8 / perRow;
+                int cs = Math.Min(R(100), Math.Min((bar.Width - R(170) - perRow * R(16)) / perRow, (barH - R(30) - (nRows - 1) * R(14)) / nRows));
+                int total = perRow * cs + (perRow - 1) * R(16) + R(36) + R(130);
+                int x0 = bar.X + (bar.Width - total) / 2, y0 = bar.Y + (barH - nRows * cs - (nRows - 1) * R(14)) / 2;
+                for (int i = 0; i < 8; i++) colorBtns[i] = new Rectangle(x0 + (i % perRow) * (cs + R(16)), y0 + (i / perRow) * (cs + R(14)), cs, cs);
+                int ch = Math.Min(R(150), barH - R(30));
+                checkBtn = new Rectangle(colorBtns[perRow - 1].Right + R(36), bar.Y + (barH - ch) / 2, R(130), ch);
 
                 if (bg != null) bg.Dispose();
                 bg = new Bitmap(Math.Max(1, Area.Width), Math.Max(1, Area.Height), PixelFormat.Format32bppPArgb);
@@ -339,24 +361,26 @@ namespace Pintinho
                 // ferramenta embaixo do dedo
                 foreach (PointF p in fingers.Values)
                 {
-                    if (stage == 0) DrawSponge(g, p.X, p.Y, Brush * K * 1.1f);
-                    else if (stage == 1) DrawHose(g, p.X, p.Y, Brush * K);
+                    if (stage == 0) DrawSponge(g, p.X, p.Y, brush * K * 1.1f);
+                    else if (stage == 1) DrawHose(g, p.X, p.Y, brush * K);
                 }
                 g.Restore(st);
 
                 // barra de baixo
                 M.RoundBox(g, bar, 28 * Sc, Color.White, M.theme.Borda, 2 * Sc);
+                if (stage <= 1)
                 {
-                    for (int i = 0; i < 2; i++)
+                    for (int i = 0; i < 3; i++)
                     {
                         Rectangle r = stepIcons[i];
                         bool cur = i == stage, done = i < stage;
                         M.RoundBox(g, r, 24 * Sc, cur ? Shapes.Hex(0xe1f5fe) : Color.White, cur ? Accent : M.theme.Borda, (cur ? 4 : 2) * Sc);
                         float cx = r.X + r.Width / 2f, cy = r.Y + r.Height / 2f, s = r.Width * 0.3f;
                         if (i == 0) DrawSponge(g, cx, cy, s);
-                        else DrawHose(g, cx, cy, s);
+                        else if (i == 1) DrawHose(g, cx, cy, s);
+                        else DrawPaintIcon(g, cx, cy, s);
                         if (done) DrawCheck(g, new RectangleF(r.Right - R(30), r.Y - R(8), R(38), R(38)));
-                        if (i < 1)
+                        if (i < 2)
                             using (Pen p = Shapes.RoundPen(M.theme.Borda, 4 * Sc))
                             {
                                 float ax = r.Right + R(12), ay = cy;
@@ -364,6 +388,25 @@ namespace Pintinho
                                 g.DrawLine(p, ax + R(10), ay - R(6), ax + R(16), ay);
                                 g.DrawLine(p, ax + R(10), ay + R(6), ax + R(16), ay);
                             }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        Rectangle r = colorBtns[i];
+                        bool sel = painted && PaintColors[i].ToArgb() == body.ToArgb();
+                        using (SolidBrush b = new SolidBrush(PaintColors[i])) g.FillEllipse(b, r);
+                        using (Pen p = new Pen(sel ? FInk : Color.FromArgb(60, FInk), (sel ? 5 : 2) * Sc)) g.DrawEllipse(p, r);
+                        using (SolidBrush b = new SolidBrush(Color.FromArgb(90, 255, 255, 255))) g.FillEllipse(b, r.X + r.Width * 0.2f, r.Y + r.Height * 0.15f, r.Width * 0.25f, r.Height * 0.18f);
+                    }
+                    if (painted && stage == 2)
+                    {
+                        float pulse = 1 + (float)Math.Sin(finishT * 6) * 0.06f;
+                        RectangleF cr = new RectangleF(checkBtn.X + checkBtn.Width * (1 - pulse) / 2, checkBtn.Y + checkBtn.Height * (1 - pulse) / 2, checkBtn.Width * pulse, checkBtn.Height * pulse);
+                        M.RoundBox(g, Rectangle.Round(cr), 26 * Sc, M.theme.Trator, Shapes.Hex(0x2f7d3d), 3 * Sc);
+                        using (Pen p = Shapes.RoundPen(Color.White, 12 * Sc))
+                            g.DrawLines(p, new PointF[] { new PointF(cr.X + cr.Width * 0.27f, cr.Y + cr.Height * 0.52f), new PointF(cr.X + cr.Width * 0.44f, cr.Y + cr.Height * 0.68f), new PointF(cr.X + cr.Width * 0.74f, cr.Y + cr.Height * 0.33f) });
                     }
                 }
             }
@@ -409,10 +452,40 @@ namespace Pintinho
                 g.Restore(st);
             }
 
+            static void DrawPaintIcon(Graphics g, float cx, float cy, float s)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    double a = -Math.PI / 2 + i * Math.PI / 2;
+                    float x = cx + (float)Math.Cos(a) * s * 0.55f, y = cy + (float)Math.Sin(a) * s * 0.55f;
+                    using (SolidBrush b = new SolidBrush(PaintColors[i * 2])) g.FillEllipse(b, x - s * 0.38f, y - s * 0.38f, s * 0.76f, s * 0.76f);
+                }
+            }
+
             // ---------- toque ----------
 
             public override void Down(Contact c, Point p)
             {
+                if (stage == 2)
+                {
+                    for (int i = 0; i < 8; i++)
+                        if (colorBtns[i].Contains(p))
+                        {
+                            body = PaintColors[i];
+                            painted = true;
+                            RenderVehicle();
+                            Sparkle(18);
+                            RepaintAll();
+                            return;
+                        }
+                    if (painted && checkBtn.Contains(p))
+                    {
+                        stage = 3;
+                        Sparkle(30);
+                        RepaintAll();
+                    }
+                    return;
+                }
                 if (stage > 1 || stageWait > 0) return;
                 int id = c.Id;
                 PointF last = p;
@@ -437,7 +510,7 @@ namespace Pintinho
             void Rub(PointF a, PointF b)
             {
                 if (mud == null) return;
-                float k = K, rad = Brush * k;
+                float k = K, rad = brush * k;
                 float dx = b.X - a.X, dy = b.Y - a.Y, len = (float)Math.Sqrt(dx * dx + dy * dy);
                 int steps = Math.Max(1, (int)(len / (rad * 0.35f)));
                 Graphics gf = stage == 0 ? Graphics.FromImage(foam) : null;
@@ -494,13 +567,13 @@ namespace Pintinho
 
             void MarkCells(float ux, float uy)
             {
-                int c0 = Math.Max(0, (int)((ux - Brush) / Cell)), c1 = Math.Min(cols - 1, (int)((ux + Brush) / Cell));
-                int r0 = Math.Max(0, (int)((uy - Brush) / Cell)), r1 = Math.Min(rows - 1, (int)((uy + Brush) / Cell));
+                int c0 = Math.Max(0, (int)((ux - brush) / Cell)), c1 = Math.Min(cols - 1, (int)((ux + brush) / Cell));
+                int r0 = Math.Max(0, (int)((uy - brush) / Cell)), r1 = Math.Min(rows - 1, (int)((uy + brush) / Cell));
                 for (int r = r0; r <= r1; r++)
                     for (int c = c0; c <= c1; c++)
                     {
                         float cx = (c + 0.5f) * Cell - ux, cy = (r + 0.5f) * Cell - uy;
-                        if (cx * cx + cy * cy > Brush * Brush) continue;
+                        if (cx * cx + cy * cy > brush * brush) continue;
                         int i = r * cols + c;
                         if (!inside[i]) continue;
                         if (stage == 0)
@@ -518,13 +591,13 @@ namespace Pintinho
                 {
                     int done = 0;
                     for (int i = 0; i < dirty.Length; i++) if (dirty[i] && scrubbed[i]) done++;
-                    if (done >= Math.Max(1, dirtyCount) * 0.88f) NextStage();
+                    if (done >= Math.Max(1, dirtyCount) * need) NextStage();
                 }
                 else if (stage == 1)
                 {
                     int done = 0;
                     for (int i = 0; i < foamy.Length; i++) if (foamy[i] && rinsed[i]) done++;
-                    if (done >= Math.Max(1, foamCount) * 0.88f) NextStage();
+                    if (done >= Math.Max(1, foamCount) * need) NextStage();
                 }
             }
 
@@ -536,7 +609,6 @@ namespace Pintinho
                 stageWait = 0.5f;
                 fingers.Clear();
                 Sparkle(16);
-                if (stage == 2) { stage = 3; Sparkle(24); } // limpinho: sai andando e vem a próxima fase
                 RepaintAll();
             }
 
@@ -581,6 +653,7 @@ namespace Pintinho
                     if (f.Life <= 0) fx.RemoveAt(i);
                 }
                 if (stageWait > 0) stageWait -= dt;
+                if (stage == 2 && painted) { finishT += dt; Repaint(Rectangle.Inflate(checkBtn, R(12), R(12))); }
                 if (stage == 3)
                 {
                     driveT += dt / 1.3f;
@@ -594,29 +667,31 @@ namespace Pintinho
             // Só para o modo --captura: pula direto para uma etapa.
             public void DemoStage(int s)
             {
-                while (stage < s && stage < 1) NextStage();
+                while (stage < s && stage < 2) NextStage();
                 fingers.Clear();
+                if (s >= 2) { body = PaintColors[4]; painted = true; RenderVehicle(); }
             }
 
-            // Só para o modo --captura: esfrega e enxágua em zigue-zague, como uma criança faria.
+            // Só para o modo --captura: esfrega e enxágua em zigue-zague, escolhe uma cor e toca no ✓.
             // Devolve a etapa a que chegou (3 = saiu andando).
             public int DemoWash()
             {
                 for (int pass = 0; pass < 2 && stage < 2; pass++)
                 {
                     int want = stage + 1;
-                    for (float y = vRect.Y; y <= vRect.Bottom && stage < want; y += Brush * K)
+                    for (float y = vRect.Y; y <= vRect.Bottom && stage < want; y += brush * K)
                     {
                         stageWait = 0;
-                        PointF a = new PointF(vRect.X, y), b = new PointF(vRect.Right, y);
-                        for (int i = 0; i < 20 && stage < want; i++)
-                        {
-                            PointF p0 = new PointF(a.X + (b.X - a.X) * i / 20f, y), p1 = new PointF(a.X + (b.X - a.X) * (i + 1) / 20f, y);
-                            Rub(p0, p1);
-                        }
+                        for (int i = 0; i < 40 && stage < want; i++)
+                            Rub(new PointF(vRect.X + vRect.Width * i / 40f, y), new PointF(vRect.X + vRect.Width * (i + 1) / 40f, y));
                     }
                 }
-                for (int i = 0; i < 30; i++) Tick(1 / 30f);
+                if (stage == 2)
+                {
+                    Contact c = new Contact();
+                    Down(c, new Point(colorBtns[Level % 8].X + 5, colorBtns[Level % 8].Y + 5));
+                    Down(c, new Point(checkBtn.X + checkBtn.Width / 2, checkBtn.Y + checkBtn.Height / 2));
+                }
                 return stage;
             }
 

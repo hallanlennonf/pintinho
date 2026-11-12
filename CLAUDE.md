@@ -24,9 +24,10 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
   combo com 3+ no mesmo traço, recorde. Vários dedos cortam juntos.
   **Joguinhos de fases** (`Screen.Mini`, 12 fases cada, ficam mais difíceis; fase seguinte destrava ao
   vencer; progresso em `fases=` no config): **Lava-jato** (2-4 anos, sem texto/tempo/derrota: esfregar a
-  lama com esponja → vira espuma, enxaguar com mangueira, e ele sai andando brilhando (a etapa de pintar
-  saiu na v0.8.1; esponja menor, `Brush = 15`); cada etapa termina sozinha com ~88% limpo; 6 veículos desenhados no próprio `WashGame.cs`,
-  fases 7-12 mais sujas), **Toupeira** (bater nas toupeiras antes do tempo; mais
+  lama com esponja → vira espuma, enxaguar com mangueira, tocar numa cor para pintar e no ✓ para sair
+  brilhando (o filho adora pintar: não tirar); cada etapa termina sozinha; **40 fases** (`MaxLevels`): a cada
+  fase mais lama, esponja menor (raio 16 → 11) e precisa limpar mais (86% → 94%); 6 veículos desenhados no
+  próprio `WashGame.cs`; tela de fases com 10 colunas deitado / 5 em pé quando o jogo tem mais de 12), **Toupeira** (bater nas toupeiras antes do tempo; mais
   buracos/velocidade; coelhinho = não bater, -3s), **Quebra-cabeça** deslizante com desenho do app pintado
   sozinho (2x2 → 5x5, botão de números, modelo ao lado), **Forca** amigável (balões estouram no lugar do
   enforcado; palavras com dica de categoria, maiores a cada fase), **Ligue os pares** (atividade de escola:

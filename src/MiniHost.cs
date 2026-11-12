@@ -73,8 +73,6 @@ namespace Pintinho
 
         void LayoutMini()
         {
-            if (mLevelFont != null) mLevelFont.Dispose();
-            mLevelFont = F(56, FontStyle.Bold);
             int W = view.Width, H = view.Height;
             mBack = new Rectangle(R(24), R(20), R(56), R(56));
             mFasesBack = new Rectangle(R(40), R(36), R(170), R(52));
@@ -84,8 +82,16 @@ namespace Pintinho
             mInfoR = new RectangleF(W * 0.4f, R(20), infoRight - W * 0.4f, R(56));
 
             int n = mini != null ? mini.Levels : 12;
-            int cols = portrait ? 3 : 6, size = portrait ? R(170) : R(150), gap = R(24);
-            int x0 = (W - (cols * size + (cols - 1) * gap)) / 2, y0 = R(236);
+            // 12 fases: botões grandes; mais que isso (Lava-jato tem 40): mais colunas e botões menores
+            bool many = n > 12;
+            int cols = many ? (portrait ? 5 : 10) : (portrait ? 3 : 6), rowsN = (n + cols - 1) / cols;
+            int gap = R(many ? 16 : 24), y0 = R(many ? 206 : 236);
+            int size = portrait ? R(170) : R(150);
+            size = Math.Min(size, (W - 2 * R(40) - (cols - 1) * gap) / cols);
+            size = Math.Min(size, (H - y0 - R(24) - (rowsN - 1) * gap) / rowsN);
+            if (mLevelFont != null) mLevelFont.Dispose();
+            mLevelFont = new Font("Segoe UI", Math.Max(8f, size * 0.37f), FontStyle.Bold, GraphicsUnit.Pixel);
+            int x0 = (W - (cols * size + (cols - 1) * gap)) / 2;
             mLevelBtns = new Rectangle[n];
             for (int i = 0; i < n; i++) mLevelBtns[i] = new Rectangle(x0 + (i % cols) * (size + gap), y0 + (i / cols) * (size + gap), size, size);
 
@@ -214,7 +220,7 @@ namespace Pintinho
                 else
                     DrawPadlock(g, r.X + r.Width / 2f, r.Y + r.Height / 2f, r.Width * 0.3f, theme.Borda);
                 if (done)
-                    using (GraphicsPath star = Shapes.Star(r.Right - R(26), r.Y + R(26), R(16), R(7), 5))
+                    using (GraphicsPath star = Shapes.Star(r.Right - r.Width * 0.17f, r.Y + r.Width * 0.17f, r.Width * 0.11f, r.Width * 0.047f, 5))
                     using (SolidBrush b = new SolidBrush(theme.Taxi))
                     using (Pen pen = new Pen(Color.White, 2 * sc))
                     {
