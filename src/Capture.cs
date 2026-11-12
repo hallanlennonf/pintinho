@@ -131,10 +131,14 @@ namespace Pintinho
 
                 // joguinhos de fases
                 Config.SetMiniBest("toupeira", 3); Config.SetMiniBest("forca", 12);
-                screen = Screen.Jogos; UpdateTheme(); DoLayout(Land); Shot("jogos-escolha-8");
-                DoLayout(Port); Shot("jogos-escolha-8-retrato");
-                string[] names = { "lavajato", "toupeira", "deslize", "forca", "ligue", "erros" };
-                int[][] lvls = { new int[] { 1, 10 }, new int[] { 1, 9 }, new int[] { 1, 7 }, new int[] { 2, 11 }, new int[] { 3, 11 }, new int[] { 1, 10 } };
+                screen = Screen.Jogos; UpdateTheme(); hubTab = 0; DoLayout(Land); Shot("jogos-pequenos");
+                DoLayout(Port); Shot("jogos-pequenos-retrato");
+                hubTab = 1; DoLayout(Land); Shot("jogos-grandes");
+                DoLayout(Port); Shot("jogos-grandes-retrato");
+                hubTab = 0;
+                string[] names = { "lavajato", "toupeira", "deslize", "forca", "ligue", "erros", "baldes", "estacionamento", "bolhas", "memoria" };
+                int[][] lvls = { new int[] { 1, 10 }, new int[] { 1, 9 }, new int[] { 1, 7 }, new int[] { 2, 11 }, new int[] { 3, 11 }, new int[] { 1, 10 },
+                    new int[] { 1, 8, 16 }, new int[] { 2, 10, 18 }, new int[] { 1, 8, 15 }, new int[] { 1, 10, 20 } };
                 for (int i = 0; i < minis.Length; i++)
                 {
                     mini = minis[i]; mstate = MState.Fases; screen = Screen.Mini; UpdateTheme(); DoLayout(Land);
@@ -243,6 +247,7 @@ namespace Pintinho
                 foreach (char ch in "AEOSRT") m.Down(new Contact(), ((HangGame)m).KeyCenter(ch));
             }
             if (m is DiffGame) { m.Hint(); m.Tick(0.2f); }
+            m.Demo(r);
             if (m is WashGame)
             {
                 // esfrega um pedaço do veículo

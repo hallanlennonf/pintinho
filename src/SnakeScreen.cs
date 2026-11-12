@@ -9,7 +9,7 @@ namespace Pintinho
 {
     enum SState { Pronto, Jogando, Pausado, Fim }
 
-    // Escolha de joguinho (8 jogos em grade) e a tela da Cobrinha.
+    // Escolha de joguinho (abas Pequenos / Grandes, jogos em grade) e a tela da Cobrinha.
     partial class MainForm
     {
         static readonly Color LcdBg = Shapes.Hex(0x9bbc0f), LcdMid = Shapes.Hex(0x306230), LcdDark = Shapes.Hex(0x0f380f);
@@ -17,8 +17,18 @@ namespace Pintinho
         // ---------- escolha de jogo ----------
 
         Rectangle hubBack;
-        readonly Rectangle[] hubCards = new Rectangle[9];
+        readonly Rectangle[] hubTabs = new Rectangle[2];
+        Rectangle[] hubCards = new Rectangle[0];
         Font hubTitleFont;
+        int hubTab; // 0 = Pequenos, 1 = Grandes
+
+        // Jogos de cada aba, pelo número da arte: 0 Comboio, 1 Cobrinha, 2 Salada de Frutas,
+        // 3+i = minis[i] (0 Lava-jato, 1 Toupeira, 2 Quebra-cabeça, 3 Forca, 4 Ligue, 5 7 Erros,
+        // 6 Baldes, 7 Estacionamento, 8 Bolhas, 9 Memória).
+        static readonly int[][] HubLists = {
+            new int[] { 3, 9, 10, 11, 12, 2, 7, 4 },
+            new int[] { 0, 1, 2, 5, 6, 8, 12 }
+        };
 
         void LayoutHub()
         {
@@ -26,10 +36,15 @@ namespace Pintinho
             hubBack = new Rectangle(R(40), R(36), R(130), R(52));
             if (hubTitleFont != null) hubTitleFont.Dispose();
             hubTitleFont = F(22, FontStyle.Bold);
-            int H = view.Height, y0 = R(186), n = hubCards.Length, gap = R(20);
-            // grade: 5 colunas deitado, 3 em pé; deixa o canto de baixo livre para o cadeado
-            int cols = portrait ? 3 : 5, rows = (n + cols - 1) / cols;
+            int tw = R(230), th = R(60), ty = R(124);
+            hubTabs[0] = new Rectangle(W / 2 - tw - R(8), ty, tw, th);
+            hubTabs[1] = new Rectangle(W / 2 + R(8), ty, tw, th);
+            int[] list = HubLists[hubTab];
+            int H = view.Height, y0 = R(206), n = list.Length, gap = R(20);
+            // grade: 4 colunas deitado, 2 em pé; deixa o canto de baixo livre para o cadeado
+            int cols = portrait ? 2 : 4, rows = (n + cols - 1) / cols;
             int w = (W - 2 * R(48) - (cols - 1) * gap) / cols, h = (H - y0 - R(100) - (rows - 1) * gap) / rows;
+            hubCards = new Rectangle[n];
             for (int i = 0; i < n; i++) hubCards[i] = new Rectangle(R(48) + (i % cols) * (w + gap), y0 + (i / cols) * (h + gap), w, h);
         }
 
@@ -45,19 +60,28 @@ namespace Pintinho
         {
             g.SmoothingMode = SmoothingMode.AntiAlias;
             DrawBackButton(g, hubBack, "Início");
-            DrawText(g, "Joguinhos", bigFont, theme.Taxi, new RectangleF(0, R(52), view.Width, R(80)), CenterFmt);
-            DrawText(g, "Escolha um jogo", subtitleFont, theme.Muted, new RectangleF(0, R(134), view.Width, R(36)), CenterFmt);
-
-            string rec0 = Config.GameRecordWave > 0 ? "Recorde: onda " + Config.GameRecordWave : "Novo";
-            string rec1 = Config.SnakeRecord > 0 ? "Recorde: " + Config.SnakeRecord : "Novo";
-            string rec2 = Config.FruitRecord > 0 ? "Recorde: " + Config.FruitRecord : "Novo";
-            DrawHubCard(g, hubCards[0], theme.Taxi, "Comboio", rec0, 0);
-            DrawHubCard(g, hubCards[1], LcdBg, "Cobrinha", rec1, 1);
-            DrawHubCard(g, hubCards[2], FRed, "Salada de Frutas", rec2, 2);
-            for (int i = 0; i < minis.Length; i++)
+            DrawText(g, "Joguinhos", bigFont, theme.Taxi, new RectangleF(0, R(40), view.Width, R(80)), CenterFmt);
+            string[] tabNames = { "Pequenos", "Grandes" };
+            for (int t = 0; t < 2; t++)
             {
-                int best = Config.MiniBest(minis[i].Key);
-                DrawHubCard(g, hubCards[3 + i], minis[i].Accent, minis[i].Title, best == 0 ? "Novo" : best >= minis[i].Levels ? "Zerado!" : "Fase " + (best + 1), 3 + i);
+                bool on = t == hubTab;
+                RoundBox(g, hubTabs[t], hubTabs[t].Height / 2f, on ? theme.Taxi : theme.Panel, on ? theme.Cone : theme.Borda, (on ? 3 : 2) * sc);
+                DrawText(g, tabNames[t], buttonFont, on ? theme.OnTaxi : theme.Ink, hubTabs[t], CenterFmt);
+            }
+
+            int[] list = HubLists[hubTab];
+            for (int i = 0; i < list.Length && i < hubCards.Length; i++)
+            {
+                int art = list[i];
+                if (art == 0) DrawHubCard(g, hubCards[i], theme.Taxi, "Comboio", Config.GameRecordWave > 0 ? "Recorde: onda " + Config.GameRecordWave : "Novo", 0);
+                else if (art == 1) DrawHubCard(g, hubCards[i], LcdBg, "Cobrinha", Config.SnakeRecord > 0 ? "Recorde: " + Config.SnakeRecord : "Novo", 1);
+                else if (art == 2) DrawHubCard(g, hubCards[i], FRed, "Salada de Frutas", Config.FruitRecord > 0 ? "Recorde: " + Config.FruitRecord : "Novo", 2);
+                else
+                {
+                    Mini m = minis[art - 3];
+                    int best = Config.MiniBest(m.Key);
+                    DrawHubCard(g, hubCards[i], m.Accent, m.Title, best == 0 ? "Novo" : best >= m.Levels ? "Zerado!" : "Fase " + (best + 1), art);
+                }
             }
             DrawLockButton(g, homeLock, 18 * sc);
         }
@@ -110,13 +134,26 @@ namespace Pintinho
 
         void HubDown(Point p)
         {
-            if (hubBack.Contains(p)) GoTo(Screen.Inicio);
-            else if (hubCards[0].Contains(p)) GoTo(Screen.Jogo);
-            else if (hubCards[1].Contains(p)) GoTo(Screen.Cobra);
-            else if (hubCards[2].Contains(p)) GoTo(Screen.Frutas);
-            else
-                for (int i = 3; i < hubCards.Length; i++)
-                    if (hubCards[i].Contains(p)) { OpenMini(i - 3); return; }
+            if (hubBack.Contains(p)) { GoTo(Screen.Inicio); return; }
+            for (int t = 0; t < 2; t++)
+                if (hubTabs[t].Contains(p) && hubTab != t)
+                {
+                    hubTab = t;
+                    LayoutHub();
+                    Invalidate();
+                    return;
+                }
+            int[] list = HubLists[hubTab];
+            for (int i = 0; i < list.Length && i < hubCards.Length; i++)
+                if (hubCards[i].Contains(p))
+                {
+                    int art = list[i];
+                    if (art == 0) GoTo(Screen.Jogo);
+                    else if (art == 1) GoTo(Screen.Cobra);
+                    else if (art == 2) GoTo(Screen.Frutas);
+                    else OpenMini(art - 3);
+                    return;
+                }
         }
 
         // ---------- cobrinha ----------

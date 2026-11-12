@@ -9,7 +9,8 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
 - **Aconchego** — para adultos (a esposa), no estilo "Bobbie Goods": desenhos fofos e detalhados,
   zoom de pinça, mais ferramentas, 16 desenhos. ⚠️ "Bobbie Goods" é marca registrada: usar só o *estilo*, com
   desenhos e nome próprios. "Aconchego" é nome provisório.
-- **Joguinhos** — tela de escolha (`Screen.Jogos`, grade 4x2 / 2x4) com 9 jogos (grade 5 colunas deitado / 3 em pé). **Cobrinha**: snake clássica (grade
+- **Joguinhos** — tela de escolha (`Screen.Jogos`) com abas **Pequenos** / **Grandes** (`HubLists` em
+  `SnakeScreen.cs`; grade 4 colunas deitado / 2 em pé; um jogo pode estar nas duas abas). **Cobrinha**: snake clássica (grade
   24x24, atravessa as bordas, morre ao morder o rabo), estilo LCD verde, paisagem e retrato.
   Controle = **cruz única** no **canto inferior esquerdo** (24 px das bordas), nas duas orientações; qualquer
   ponto da cruz vale, a direção é o lado mais próximo do centro (dá para "rolar" o dedão). A versão
@@ -34,6 +35,12 @@ App de pintar/colorir, em **tela cheia em modo "quiosque"**, com **modos** escol
   frutas, formas, cor, sombra, número↔quantidade, maiúscula↔minúscula, continhas; arrastar ou tocar
   um e outro; nunca perde), **7 Erros** (cenas geradas na hora; fase 1 = 3 erros, 2-3 = 5, depois 7;
   diferenças mais sutis; botão Dica).
+  Joguinhos dos pequenos de 20 fases (v0.10.0), todos sem perder e aceitando arrastar ou tocar-e-tocar:
+  **Baldes de cor** (bolinhas/formas → balde da mesma cor; mais cores e itens), **Estacionamento**
+  (carro → vaga: cor nas fases 1-7, forma 8-14, número↔bolinhas 15-20; 2 fileiras de vagas em pé),
+  **Bolhas** (tocar para estourar; 1-5 qualquer, 6-12 só a cor pedida, 13-20 só o desenho pedido; mais
+  rápidas/menores), **Memória** (2 → 10 pares; da 12 em diante figuras parecidas). `Sparks` (MiniHost) =
+  confete comum; `Mini.Demo()` = jogada automática para as capturas.
 Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
 
 ## Hardware alvo (restrição principal)
@@ -114,7 +121,9 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
   - `MiniHost.cs` — base dos joguinhos de fases (classe `Mini`: Start/Layout/Paint/Down/Up/Tick/DrawArt;
     escolha de fase, cabeçalho, cartão de fim, relógio de 15 ms; cada jogo invalida só o que mexeu) +
     ajudantes (formas, balão, flor, `AutoColor` = pinta sozinho as regiões de um desenho).
-    Jogos: `WashGame.cs`, `MoleGame.cs`, `SlideGame.cs`, `HangGame.cs`, `MatchGame.cs`, `DiffGame.cs`.
+    Jogos: `WashGame.cs`, `MoleGame.cs`, `SlideGame.cs`, `HangGame.cs`, `MatchGame.cs`, `DiffGame.cs`,
+    `BucketGame.cs`, `ParkGame.cs`, `BubbleGame.cs`, `MemoryGame.cs` (ordem do array `minis` importa: a
+    arte/índice do hub é 3 + posição).
   - `Capture.cs` — modo `--captura`.
 - `Game.cs` — lógica pura do Comboio (espaço 760 x H; ondas, inimigos, tiros, plaquinhas, partículas).
 - `Surface.cs` — tinta + contorno + máscara do balde; desfazer/refazer; `StrokePath` (traço
@@ -143,9 +152,7 @@ Ideia de longo prazo: talvez comercializar. Fase atual: **alpha**.
   instalador e atualização automática.
 - Mais desenhos (Aconchego e veículos); pacote de desenhos baixável sem nova versão do app.
 - Comboio: testar fps e balanceamento no tablet; sons; mais tipos de gosma.
-- Próximos jogos combinados (2-4 anos primeiro): Baldes de cor, Estacionamento, Bolhas, Memória; adultos:
-  Caça-palavras, Sudoku, Junta-números. Com tantos jogos, a tela de escolha vai precisar de abas
-  (Pequenos / Grandes) ou páginas.
+- Próximos jogos combinados (adultos, aba Grandes): Caça-palavras, Sudoku, Junta-números.
 - Mais ideias: labirinto, ligue os pontos, sequência, contar, siga o mestre, esconde-esconde, monta o
   caminhão, quebra-blocos, paciência, palavra do dia. Sons gerados em código.
 - Sons; abrir desenhos salvos para continuar; Aconchego com folha retrato.

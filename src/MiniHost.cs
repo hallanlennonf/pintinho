@@ -37,6 +37,7 @@ namespace Pintinho
             public virtual void Up(int id) { }
             public virtual void Tick(float dt) { }
             public abstract void DrawArt(Graphics g, Rectangle img); // cartão da escolha de jogo
+            public virtual void Demo(Random r) { }                   // só para --captura: joga um pouco
 
             protected int R(float v) { return M.R(v); }
             protected float Sc { get { return M.sc; } }
@@ -57,7 +58,8 @@ namespace Pintinho
 
         void InitMinis()
         {
-            minis = new Mini[] { new WashGame(), new MoleGame(), new SlideGame(), new HangGame(), new MatchGame(), new DiffGame() };
+            minis = new Mini[] { new WashGame(), new MoleGame(), new SlideGame(), new HangGame(), new MatchGame(), new DiffGame(),
+                new BucketGame(), new ParkGame(), new BubbleGame(), new MemoryGame() };
             foreach (Mini m in minis) m.M = this;
             miniTimer.Interval = 15;
             miniTimer.Tick += OnMiniTick;
@@ -309,6 +311,63 @@ namespace Pintinho
         }
 
         // ---------- ajudantes de desenho dos joguinhos ----------
+
+        // Brilhinhos / confete que comemoram um acerto. Tick devolve true enquanto houver algum.
+        class Sparks
+        {
+            class P { public float X, Y, VX, VY, Life, Size, Rot; public Color C; public bool Star; }
+            readonly List<P> list = new List<P>();
+            readonly Random rnd = new Random(11);
+
+            public int Count { get { return list.Count; } }
+            public void Clear() { list.Clear(); }
+
+            public void Burst(float x, float y, int n, float size, Color c)
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    P p = new P();
+                    double a = rnd.NextDouble() * Math.PI * 2;
+                    float v = size * (3 + (float)rnd.NextDouble() * 5);
+                    p.X = x; p.Y = y;
+                    p.VX = (float)Math.Cos(a) * v; p.VY = (float)Math.Sin(a) * v - size * 2;
+                    p.Life = 0.5f + (float)rnd.NextDouble() * 0.5f;
+                    p.Size = size * (0.5f + (float)rnd.NextDouble() * 0.7f);
+                    p.Rot = (float)rnd.NextDouble() * 90;
+                    p.Star = rnd.Next(3) > 0;
+                    p.C = rnd.Next(3) == 0 ? Shapes.Hex(0xffd54f) : c;
+                    list.Add(p);
+                }
+            }
+
+            public bool Tick(float dt)
+            {
+                for (int i = list.Count - 1; i >= 0; i--)
+                {
+                    P p = list[i];
+                    p.X += p.VX * dt; p.Y += p.VY * dt;
+                    p.VY += p.Size * 14 * dt;
+                    p.Rot += 200 * dt;
+                    p.Life -= dt;
+                    if (p.Life <= 0) list.RemoveAt(i);
+                }
+                return list.Count > 0;
+            }
+
+            public void Paint(Graphics g)
+            {
+                foreach (P p in list)
+                {
+                    int a = (int)(255 * Math.Min(1, p.Life * 3));
+                    using (SolidBrush b = new SolidBrush(Color.FromArgb(a, p.C)))
+                    {
+                        if (p.Star)
+                            using (GraphicsPath s = Shapes.Star(p.X, p.Y, p.Size, p.Size * 0.42f, 5)) g.FillPath(b, s);
+                        else g.FillEllipse(b, p.X - p.Size * 0.6f, p.Y - p.Size * 0.6f, p.Size * 1.2f, p.Size * 1.2f);
+                    }
+                }
+            }
+        }
 
         static readonly Color[] Bright = {
             Shapes.Hex(0xe53935), Shapes.Hex(0xfb8c00), Shapes.Hex(0xfdd835), Shapes.Hex(0x43a047),
